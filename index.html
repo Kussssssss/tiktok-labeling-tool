@@ -1064,6 +1064,8 @@
                     document.getElementById('step2').classList.add('success');
                     container.innerHTML = blockquoteResult.html;
                     await loadEmbedScript();
+                    // Tự động reload script để đảm bảo video hiển thị
+                    setTimeout(() => { forceReloadScript(); }, 200);
                     return;
                 }
                 document.getElementById('step2').classList.remove('active');
