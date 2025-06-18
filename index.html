@@ -1103,10 +1103,11 @@
                     <div class="error-container">
                         <div style="font-size: 2em; margin-bottom: 15px;">🔗</div>
                         <div><strong>Embed không khả dụng</strong></div>
-                        <div style="margin: 15px 0;">Hãy sử dụng tab "Link" để xem video</div>
-                        <button onclick="switchTab('external')" style="padding: 10px 20px; background: #ff0050; color: white; border: none; border-radius: 5px; cursor: pointer;">
-                            Chuyển sang External
+                        <div style="margin: 15px 0;">Không thể nhúng video này do chính sách của TikTok hoặc lỗi kỹ thuật.</div>
+                        <button onclick="window.open('${currentVideoUrl}', '_blank')" style="padding: 10px 20px; background: #ff0050; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight:600; font-size:1em;">
+                            Mở video trên TikTok
                         </button>
+                        <div style="margin-top:10px; font-size:0.95em; color:#555;">Bạn vẫn có thể xem video này trực tiếp trên TikTok.</div>
                     </div>
                 `;
 
