@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TikTok Video Labeling Tool v2.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -1447,42 +1448,29 @@
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
-        // Load and display guideline from Guideline.csv (card style)
+        // Load and display guideline from Guideline.csv (card style, dùng PapaParse)
         async function loadGuideline() {
             try {
                 const response = await fetch('Guideline.csv');
                 const text = await response.text();
-                const lines = text.split('\n').filter(line => line.trim().length > 0);
-                let data = [];
+                const data = Papa.parse(text, {header: true, skipEmptyLines: true}).data;
                 let notes = [];
-                for (let i = 1; i < lines.length; i++) {
-                    const cols = lines[i].split(',');
-                    // Nếu là dòng nhãn
-                    if (cols[1] && cols[2] && cols[3] && cols[0]) {
-                        data.push({
-                            label: cols[1].trim(),
-                            def: cols[2].replace(/"/g, '').trim(),
-                            example: (cols[3] || '').replace(/"/g, '').replace(/\\n/g, '<br>')
-                        });
-                    } else if (cols[2] && !cols[1]) {
-                        // Nếu là dòng ghi chú
-                        notes.push(cols[2].replace(/"/g, '').trim());
-                    }
-                }
-                // Hiển thị card cho từng nhãn
                 let html = '';
                 const colors = ['#ffe7ba', '#ffd6e7', '#d6f5ff', '#e2ffe6'];
                 const icons = ['🔞','⚠️','🆘','✅'];
                 data.forEach((row, idx) => {
+                    if (!row.Label) {
+                        if (row.Defination) notes.push(row.Defination);
+                        return;
+                    }
                     let videoHtml = '';
-                    if (row.link && row.link.length > 5) {
-                        let parts = row.link.split('_');
+                    if (row.Link && row.Link.length > 5) {
+                        let parts = row.Link.split('_');
                         if (parts.length === 2) {
                             let username = parts[0];
                             let vid = parts[1];
                             let tiktokUrl = `https://www.tiktok.com/@${username}/video/${vid}`;
-                            // Fallback: hiển thị thumbnail + link
-                            let thumbUrl = `https://p16-sign-va.tiktokcdn.com/obj/tos-maliva-p-0068/${vid}_~tplv-tiktok-play.jpeg`;
+                            let thumbUrl = `https://www.tiktok.com/api/img/?itemId=${vid}`;
                             videoHtml = `
                                 <div style='margin-top:10px;'>
                                     <a href='${tiktokUrl}' target='_blank' style='text-decoration:none;'>
@@ -1493,19 +1481,14 @@
                             `;
                         }
                     }
-                    html += `<div style=\"background:${colors[idx%colors.length]};border-radius:12px;padding:18px 20px;min-width:220px;max-width:340px;box-shadow:0 2px 8px #0001;flex:1 1 260px;\">\n                        <div style='font-size:1.3em;font-weight:700;margin-bottom:8px;'>${icons[idx%icons.length]} ${row.label}</div>\n                        <div style='margin-bottom:8px;'><b>Định nghĩa:</b> <span style='color:#333;'>${row.def}</span></div>\n                        <div style='font-size:0.98em;'><b>Ví dụ:</b><br><span style='color:#555;'>${row.example}</span>${videoHtml}</div>\n                    </div>`;
+                    html += `<div style="background:${colors[idx%colors.length]};border-radius:12px;padding:18px 20px;min-width:220px;max-width:340px;box-shadow:0 2px 8px #0001;flex:1 1 260px;">
+                        <div style='font-size:1.3em;font-weight:700;margin-bottom:8px;'>${icons[idx%icons.length]} ${row.Label}</div>
+                        <div style='margin-bottom:8px;'><b>Định nghĩa:</b> <span style='color:#333;'>${row.Defination}</span></div>
+                        <div style='font-size:0.98em;'><b>Ví dụ:</b><br><span style='color:#555;'>${(row.Example||'').replace(/\\n/g, '<br>')}</span>${videoHtml}</div>
+                    </div>`;
                 });
                 document.getElementById('guidelineCards').innerHTML = html;
-                // Hiển thị ghi chú cuối
                 document.getElementById('guidelineNote').innerHTML = notes.map(n => `<div style='margin-bottom:4px;'>${n}</div>`).join('');
-                // Chèn script TikTok embed nếu chưa có
-                if (!document.getElementById('tiktok-embed-script')) {
-                    const script = document.createElement('script');
-                    script.id = 'tiktok-embed-script';
-                    script.src = 'https://www.tiktok.com/embed.js';
-                    script.async = true;
-                    document.head.appendChild(script);
-                }
             } catch (e) {
                 document.getElementById('guidelineCards').innerHTML = '<i>Không thể tải guideline.</i>';
             }
