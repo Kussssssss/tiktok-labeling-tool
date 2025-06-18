@@ -1560,18 +1560,26 @@
                 return;
             }
 
-            const headers = [...Object.keys(csvData[0]), 'empty'];
+            // Get headers and ensure 'Empty' is included
+            const headers = Object.keys(csvData[0]);
+            if (!headers.includes('Empty')) {
+                headers.push('Empty');
+            }
             let csvContent = headers.join(',') + '\n';
 
             csvData.forEach(row => {
-                const values = Object.keys(csvData[0]).map(header => {
+                const values = headers.map(header => {
                     let value = row[header];
+                    // Convert id_video to string if it exists
+                    if (header === 'id_video' && value) {
+                        value = String(value);
+                    }
+                    // Convert boolean values to string
                     if (typeof value === 'boolean') {
                         value = value ? 'true' : 'false';
                     }
                     return `"${value}"`;
                 });
-                values.push('""');
                 csvContent += values.join(',') + '\n';
             });
 
