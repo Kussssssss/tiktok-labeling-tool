@@ -858,7 +858,6 @@
         function parseCSV(csv) {
             const lines = csv.split('\n');
             const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-            
             csvData = [];
             for (let i = 1; i < lines.length; i++) {
                 if (lines[i].trim()) {
@@ -870,35 +869,25 @@
                     csvData.push(row);
                 }
             }
-
             displayVideoList();
             updateStats();
             document.getElementById('stats').style.display = 'flex';
             document.getElementById('progressBar').style.display = 'block';
             document.getElementById('mainContent').style.display = 'grid';
             document.getElementById('exportBtn').style.display = 'inline-block';
-            
             if (csvData.length > 0) {
                 loadVideo(0);
             }
         }
 
-        function extractVideoId(filename) {
-            const match = filename.match(/_(\d+)\.mp4$/);
-            return match ? match[1] : null;
-        }
-
         function displayVideoList() {
             const container = document.getElementById('videoListContainer');
             container.innerHTML = '';
-
             csvData.forEach((row, index) => {
                 const videoItem = document.createElement('div');
                 videoItem.className = 'video-item';
                 videoItem.onclick = () => loadVideo(index);
-
                 const labels = [];
-                
                 if (row['Harmful Content'] === true || row['Harmful Content'] === 'true' || row['Harmful Content'] === '1') {
                     labels.push('<span class="label-tag active">Harmful</span>');
                 }
@@ -914,40 +903,33 @@
                 if (row['confuse'] === true || row['confuse'] === 'true' || row['confuse'] === '1') {
                     labels.push('<span class="label-tag">Confuse</span>');
                 }
-
                 if (labels.length === 0) {
                     labels.push('<span class="label-tag" style="background: #6c757d; opacity: 0.7;">Chưa gắn nhãn</span>');
                 }
-
                 videoItem.innerHTML = `
                     <div class="video-info">
-                        <div class="video-filename">${row.filename}</div>
+                        <div class="video-filename">${row.username || ''} <span style='color:#888;'>(${row.id_video})</span></div>
                         <div class="video-labels">${labels.join('')}</div>
                     </div>
                     <div style="color: #6c757d; font-size: 0.9em;">#${index + 1}</div>
                 `;
-
                 container.appendChild(videoItem);
             });
         }
 
         function loadVideo(index) {
             if (index < 0 || index >= csvData.length) return;
-
             currentVideoIndex = index;
             const row = csvData[index];
-            const videoId = extractVideoId(row.filename);
+            const videoId = row.id_video;
             currentVideoId = videoId;
-
             document.querySelectorAll('.video-item').forEach((item, i) => {
                 item.classList.toggle('active', i === index);
             });
-
             document.getElementById('currentVideoInfo').innerHTML = `
                 <strong>Video ${index + 1} / ${csvData.length}</strong><br>
-                <small>${row.filename}</small>
+                <small>${row.username || ''} (${row.id_video})</small>
             `;
-
             if (videoId) {
                 const playerContainer = document.getElementById('videoPlayerContainer');
                 const openBtn = document.getElementById('openTikTokBtn');
@@ -956,20 +938,15 @@
                 const playerUrlDisplay = document.getElementById('videoPlayerUrl');
                 const videoCounter = document.getElementById('videoCounter');
                 const videoTitle = document.getElementById('videoTitle');
-                
                 const playerUrl = `https://www.tiktok.com/player/v1/${videoId}?autoplay=1&controls=1`;
                 const publicUrl = `https://www.tiktok.com/@tiktok/video/${videoId}`;
-                
                 currentVideoUrl = publicUrl;
                 currentPlayerUrl = playerUrl;
-                
-                videoTitle.textContent = `${row.filename}`;
+                videoTitle.textContent = `${row.username || ''} (${row.id_video})`;
                 videoCounter.textContent = `${index + 1} / ${csvData.length}`;
                 if (urlDisplay) urlDisplay.textContent = publicUrl;
                 if (playerUrlDisplay) playerUrlDisplay.textContent = playerUrl;
-                
                 setupDropZone();
-                
                 if (openBtn) {
                     openBtn.onclick = () => {
                         const newWindow = window.open(playerUrl, '_blank');
@@ -982,14 +959,12 @@
                                 window.open(publicUrl, '_blank');
                             }
                         }, 1000);
-                        
                         openBtn.innerHTML = '<span>✅</span><span>Đã mở!</span>';
                         setTimeout(() => {
                             openBtn.innerHTML = '<span>📱</span><span>Xem Video TikTok</span>';
                         }, 2000);
                     };
                 }
-                
                 if (copyBtn) {
                     copyBtn.onclick = () => {
                         navigator.clipboard.writeText(publicUrl).then(() => {
@@ -1004,7 +979,6 @@
                             textArea.select();
                             document.execCommand('copy');
                             document.body.removeChild(textArea);
-                            
                             copyBtn.innerHTML = '✅';
                             setTimeout(() => {
                                 copyBtn.innerHTML = '<span>📋</span>';
@@ -1012,27 +986,23 @@
                         });
                     };
                 }
-                
                 resetAllContainers();
                 playerContainer.style.display = 'block';
             } else {
                 document.getElementById('videoPlayerContainer').style.display = 'none';
-                alert('Không thể trích xuất ID video từ filename: ' + row.filename);
+                alert('Không thể lấy id_video từ dòng dữ liệu!');
             }
-
             // Load current labels
             const harmfulCheckbox = document.getElementById('harmfulContent');
             const suicideCheckbox = document.getElementById('suicide');
             const adultCheckbox = document.getElementById('adultContent');
             const safeCheckbox = document.getElementById('safe');
             const confuseCheckbox = document.getElementById('confuse');
-
             harmfulCheckbox.checked = (row['Harmful Content'] === true || row['Harmful Content'] === 'true' || row['Harmful Content'] === '1');
             suicideCheckbox.checked = (row['Suicide'] === true || row['Suicide'] === 'true' || row['Suicide'] === '1');
             adultCheckbox.checked = (row['Adult Content'] === true || row['Adult Content'] === 'true' || row['Adult Content'] === '1');
             safeCheckbox.checked = (row['Safe'] === true || row['Safe'] === 'true' || row['Safe'] === '1');
             confuseCheckbox.checked = (row['confuse'] === true || row['confuse'] === 'true' || row['confuse'] === '1');
-
             document.getElementById('labelingControls').style.display = 'grid';
             updateNavigationButtons();
         }
@@ -1048,60 +1018,45 @@
         // Smart Auto Method
         async function smartLoadVideo() {
             if (csvData.length === 0) return;
-
-            // Tạo bảng trạng thái cho toàn bộ video
             const container = document.getElementById('smartContainer');
             const progress = document.getElementById('smartProgress');
             progress.style.display = 'block';
             container.innerHTML = '<div class="loading-spinner"></div>';
-
-            // Reset trạng thái
             document.querySelectorAll('.progress-step').forEach(step => {
                 step.className = 'progress-step';
             });
-
-            // Tạo bảng trạng thái
             let statusTable = '<table style="width:100%;color:#222;background:rgba(255,255,255,0.95);border-radius:10px;overflow:hidden;font-size:0.98em;">';
-            statusTable += '<tr style="background:#f3f3f3;"><th style="padding:8px;">#</th><th style="padding:8px;">Tên file</th><th style="padding:8px;">Trạng thái</th></tr>';
-
+            statusTable += '<tr style="background:#f3f3f3;"><th style="padding:8px;">#</th><th style="padding:8px;">Username</th><th style="padding:8px;">ID Video</th><th style="padding:8px;">Trạng thái</th></tr>';
             for (let i = 0; i < csvData.length; i++) {
                 const row = csvData[i];
-                const videoId = extractVideoId(row.filename);
-                const videoUrl = videoId ? `https://www.tiktok.com/@tiktok/video/${videoId}` : null;
+                const videoId = row.id_video;
                 let status = '<span style="color:#888;">Đang thử...</span>';
-                statusTable += `<tr id="row-status-${i}"><td style="padding:8px;">${i+1}</td><td style="padding:8px;">${row.filename}</td><td style="padding:8px;">${status}</td></tr>`;
+                statusTable += `<tr id="row-status-${i}"><td style="padding:8px;">${i+1}</td><td style="padding:8px;">${row.username || ''}</td><td style="padding:8px;">${videoId}</td><td style="padding:8px;">${status}</td></tr>`;
             }
             statusTable += '</table>';
             container.innerHTML = statusTable;
-
-            // Hàm cập nhật trạng thái từng dòng
             function updateStatus(index, html) {
                 const row = document.getElementById('row-status-' + index);
-                if (row) row.cells[2].innerHTML = html;
+                if (row) row.cells[3].innerHTML = html;
             }
-
-            // Thử lần lượt từng video
             for (let i = 0; i < csvData.length; i++) {
                 const row = csvData[i];
-                const videoId = extractVideoId(row.filename);
+                const videoId = row.id_video;
                 const videoUrl = videoId ? `https://www.tiktok.com/@tiktok/video/${videoId}` : null;
                 if (!videoId) {
-                    updateStatus(i, '<span style="color:#dc3545;">Không lấy được ID</span>');
+                    updateStatus(i, '<span style="color:#dc3545;">Không có ID</span>');
                     continue;
                 }
-                // Ưu tiên thử Blockquote trước
                 let blockquoteResult = await tryBlockquoteMethodSmart(videoId, videoUrl);
                 if (blockquoteResult.success) {
                     updateStatus(i, '<span style="color:#28a745;">Blockquote OK</span> <button onclick="loadVideo(' + i + ')">Xem</button>');
                     continue;
                 }
-                // Nếu Blockquote fail, thử oEmbed
                 let oembedResult = await tryOEmbedMethodSmart(videoUrl);
                 if (oembedResult.success) {
                     updateStatus(i, '<span style="color:#007bff;">oEmbed OK</span> <button onclick="loadVideo(' + i + ')">Xem</button>');
                     continue;
                 }
-                // Nếu cả hai đều fail, fallback external
                 updateStatus(i, '<span style="color:#ff0050;">Không nhúng được</span> <button onclick="loadVideo(' + i + ')">Xem</button>');
             }
         }
@@ -1415,6 +1370,32 @@
                 displayVideoList();
                 updateStats();
             }
+        }
+
+        // Thêm lại hàm updateStats để cập nhật tiến độ
+        function updateStats() {
+            const total = csvData.length;
+            let labeled = 0;
+
+            csvData.forEach(row => {
+                const hasLabel = (
+                    (row['Harmful Content'] === true || row['Harmful Content'] === 'true' || row['Harmful Content'] === '1') ||
+                    (row['Suicide'] === true || row['Suicide'] === 'true' || row['Suicide'] === '1') ||
+                    (row['Adult Content'] === true || row['Adult Content'] === 'true' || row['Adult Content'] === '1') ||
+                    (row['Safe'] === true || row['Safe'] === 'true' || row['Safe'] === '1') ||
+                    (row['confuse'] === true || row['confuse'] === 'true' || row['confuse'] === '1')
+                );
+                if (hasLabel) {
+                    labeled++;
+                }
+            });
+
+            const progress = total > 0 ? Math.round((labeled / total) * 100) : 0;
+
+            document.getElementById('totalVideos').textContent = total;
+            document.getElementById('labeledVideos').textContent = labeled;
+            document.getElementById('progressPercent').textContent = progress + '%';
+            document.getElementById('progressFill').style.width = progress + '%';
         }
 
         // Initialize on load
