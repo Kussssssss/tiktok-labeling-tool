@@ -1032,26 +1032,163 @@
         let currentVideoUrl = null;
         let currentPlayerUrl = null;
         let embedScriptLoaded = false;
+        let fileHandle = null;
+        let lastSaveTime = null;
+        let originalFile = null;
+        let hasUnsavedChanges = false;
+        let permissionRequested = false;
+
+        // Reset file input value when clicking
+        document.getElementById('csvFile').addEventListener('click', function(e) {
+            this.value = ''; // Reset file input
+        });
+
+        // Add permission request dialog
+        function showPermissionDialog() {
+            return new Promise((resolve) => {
+                const dialog = document.createElement('div');
+                dialog.style.cssText = `
+                    position: fixed;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: white;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    max-width: 400px;
+                    width: 90%;
+                `;
+                
+                dialog.innerHTML = `
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Yêu cầu quyền truy cập file</h3>
+                    <p style="margin-bottom: 20px; color: #4a5568; line-height: 1.5;">
+                        Để tự động lưu các thay đổi, chúng tôi cần quyền truy cập vào file của bạn.
+                        Nếu bạn từ chối, các thay đổi sẽ được lưu tạm thời và bạn cần xuất file thủ công.
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button id="denyPermission" style="
+                            padding: 8px 16px;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 6px;
+                            background: #f8fafc;
+                            color: #4a5568;
+                            cursor: pointer;
+                        ">Từ chối</button>
+                        <button id="grantPermission" style="
+                            padding: 8px 16px;
+                            border: none;
+                            border-radius: 6px;
+                            background: #4299e1;
+                            color: white;
+                            cursor: pointer;
+                        ">Đồng ý</button>
+                    </div>
+                `;
+
+                // Add overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(0,0,0,0.5);
+                    z-index: 999;
+                `;
+
+                document.body.appendChild(overlay);
+                document.body.appendChild(dialog);
+
+                // Handle button clicks
+                document.getElementById('grantPermission').onclick = () => {
+                    document.body.removeChild(overlay);
+                    document.body.removeChild(dialog);
+                    resolve(true);
+                };
+
+                document.getElementById('denyPermission').onclick = () => {
+                    document.body.removeChild(overlay);
+                    document.body.removeChild(dialog);
+                    resolve(false);
+                };
+            });
+        }
 
         // File input event listener
-        document.getElementById('csvFile').addEventListener('change', function(e) {
+        document.getElementById('csvFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const csv = e.target.result;
-                        parseCSV(csv);
-                    } catch (error) {
-                        showNotification('❌ Lỗi khi đọc file CSV: ' + error.message, 'error');
+            if (!file) return;
+
+            try {
+                // Reset previous data
+                csvData = [];
+                fileHandle = null;
+                originalFile = file;
+                hasUnsavedChanges = false;
+                permissionRequested = false;
+
+                // Read file content
+                const csv = await readFileContent(file);
+                if (!csv) {
+                    throw new Error('Không thể đọc nội dung file');
+                }
+
+                // Parse CSV data
+                parseCSV(csv);
+
+                // Request permission if not already requested
+                if (!permissionRequested) {
+                    const granted = await showPermissionDialog();
+                    permissionRequested = true;
+
+                    if (granted) {
+                        try {
+                            fileHandle = await window.showSaveFilePicker({
+                                suggestedName: file.name,
+                                types: [{
+                                    description: 'CSV Files',
+                                    accept: {'text/csv': ['.csv']},
+                                }],
+                            });
+                            showNotification('📂 Đã tải file CSV thành công!', 'success');
+                        } catch (error) {
+                            console.warn('Không thể lấy quyền truy cập file:', error);
+                            showNotification('⚠️ Không thể lấy quyền truy cập file. Dữ liệu sẽ được lưu tạm thời.', 'error');
+                        }
+                    } else {
+                        showNotification('ℹ️ Bạn có thể xuất file thủ công khi cần.', 'success');
                     }
-                };
-                reader.onerror = function() {
-                    showNotification('❌ Lỗi khi đọc file', 'error');
-                };
-                reader.readAsText(file);
+                }
+            } catch (error) {
+                showNotification('❌ Lỗi khi xử lý file: ' + error.message, 'error');
+                resetUI();
             }
         });
+
+        // Helper function to reset UI
+        function resetUI() {
+            document.getElementById('stats').style.display = 'none';
+            document.getElementById('progressBar').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('exportBtn').style.display = 'none';
+            document.getElementById('videoListContainer').innerHTML = '';
+            document.getElementById('currentVideoInfo').innerHTML = 'Chọn một video để bắt đầu';
+            document.getElementById('videoPlayerContainer').style.display = 'none';
+            document.getElementById('labelingControls').style.display = 'none';
+        }
+
+        // Helper function to read file content
+        function readFileContent(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = (e) => reject(new Error('Lỗi khi đọc file'));
+                reader.readAsText(file);
+            });
+        }
 
         // Parse CSV data
         function parseCSV(csv) {
@@ -1524,6 +1661,10 @@
 
                 displayVideoList();
                 updateStats();
+                
+                hasUnsavedChanges = true;
+                // Auto-save after label update
+                autoSave();
             }
         }
 
@@ -1554,13 +1695,37 @@
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
-        function exportCSV() {
-            if (csvData.length === 0) {
-                alert('Không có dữ liệu để xuất!');
-                return;
+        // Add auto-save function
+        async function autoSave() {
+            if (csvData.length === 0 || !hasUnsavedChanges) return;
+            
+            try {
+                const csvContent = generateCSVContent();
+                
+                if (fileHandle) {
+                    try {
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(csvContent);
+                        await writable.close();
+                        lastSaveTime = new Date();
+                        hasUnsavedChanges = false;
+                        showNotification('💾 Đã tự động lưu!', 'success');
+                    } catch (error) {
+                        console.warn('Lỗi khi lưu file:', error);
+                        fileHandle = null;
+                        downloadCSV(csvContent, originalFile ? originalFile.name : 'labeled_tiktok_videos.csv');
+                    }
+                } else if (permissionRequested) {
+                    // Only download if permission was requested and denied
+                    downloadCSV(csvContent, originalFile ? originalFile.name : 'labeled_tiktok_videos.csv');
+                }
+            } catch (error) {
+                showNotification('❌ Lỗi khi tự động lưu: ' + error.message, 'error');
             }
+        }
 
-            // Get headers and ensure 'Empty' is included
+        // Helper function to generate CSV content
+        function generateCSVContent() {
             const headers = Object.keys(csvData[0]);
             if (!headers.includes('Empty')) {
                 headers.push('Empty');
@@ -1570,11 +1735,9 @@
             csvData.forEach(row => {
                 const values = headers.map(header => {
                     let value = row[header];
-                    // Convert id_video to string if it exists
                     if (header === 'id_video' && value) {
                         value = String(value);
                     }
-                    // Convert boolean values to string
                     if (typeof value === 'boolean') {
                         value = value ? 'true' : 'false';
                     }
@@ -1583,20 +1746,72 @@
                 csvContent += values.join(',') + '\n';
             });
 
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            
-            const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-            link.setAttribute('download', `labeled_tiktok_videos_${timestamp}.csv`);
-            
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+            return csvContent;
+        }
 
-            showNotification('💾 Đã xuất CSV thành công!', 'success');
+        // Helper function to download CSV
+        function downloadCSV(csvContent, filename) {
+            try {
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                lastSaveTime = new Date();
+                hasUnsavedChanges = false;
+                showNotification('💾 Đã lưu file tạm thời!', 'success');
+            } catch (error) {
+                showNotification('❌ Lỗi khi tải xuống file: ' + error.message, 'error');
+            }
+        }
+
+        // Modify exportCSV to handle both file handle and download
+        async function exportCSV() {
+            if (csvData.length === 0) {
+                alert('Không có dữ liệu để xuất!');
+                return;
+            }
+
+            try {
+                const csvContent = generateCSVContent();
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+                const defaultFilename = `labeled_tiktok_videos_${timestamp}.csv`;
+
+                if (!permissionRequested) {
+                    const granted = await showPermissionDialog();
+                    permissionRequested = true;
+
+                    if (granted) {
+                        try {
+                            const newFileHandle = await window.showSaveFilePicker({
+                                suggestedName: defaultFilename,
+                                types: [{
+                                    description: 'CSV Files',
+                                    accept: {'text/csv': ['.csv']},
+                                }],
+                            });
+
+                            const writable = await newFileHandle.createWritable();
+                            await writable.write(csvContent);
+                            await writable.close();
+                            showNotification('💾 Đã xuất CSV thành công!', 'success');
+                            return;
+                        } catch (error) {
+                            console.warn('Không thể lưu file:', error);
+                        }
+                    }
+                }
+
+                // Fallback to download
+                downloadCSV(csvContent, defaultFilename);
+            } catch (error) {
+                showNotification('❌ Lỗi khi xuất CSV: ' + error.message, 'error');
+            }
         }
 
         function showNotification(message, type = 'success') {
@@ -1743,6 +1958,25 @@
                     header.classList.toggle('collapsed');
                     content.classList.toggle('collapsed');
                 });
+            }
+        });
+
+        // Add auto-save interval
+        setInterval(() => {
+            if (csvData.length > 0 && hasUnsavedChanges) {
+                const now = new Date();
+                if (!lastSaveTime || (now - lastSaveTime) > 300000) { // Auto-save every 5 minutes if there are changes
+                    autoSave();
+                }
+            }
+        }, 60000); // Check every minute
+
+        // Add beforeunload event listener
+        window.addEventListener('beforeunload', function(e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
             }
         });
     </script>
