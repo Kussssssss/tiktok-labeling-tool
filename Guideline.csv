@@ -1,0 +1,23 @@
+,,,,,
+,,,,,
+,STT,Label,Defination,Example,Link
+,1,Adult Content,"Nội dung có chứa yếu tố tình dục, khỏa thân, hoặc ngôn ngữ không phù hợp với trẻ em, bao gồm cả nội dung gợi dục hoặc khiêu dâm.","- Hình ảnh hoặc video có cảnh khỏa thân, mặc đồ lót hoặc trang phục gợi cảm quá mức.
+- Nội dung mô tả hành vi tình dục hoặc ngôn ngữ khiêu dâm.
+- Video khiêu vũ hoặc biểu diễn với động tác gợi dục.
+- Nội dung quảng cáo hoặc giới thiệu dịch vụ tình dục.",example
+,2,Harmful,"Nội dung chứa hình ảnh, hành vi bạo lực, nguy hiểm hoặc có hại cho trẻ em, làm cho trẻ bắt chước các hành vi này","- Video mô tả hành vi bạo lực, như đánh nhau, hành hạ người khác, hoặc sử dụng vũ khí.
+- Thử thách nguy hiểm (ví dụ: thử thách ăn chất tẩy rửa) có thể dẫn đến thương tích hoặc tử vong.
+- Hành vi bắt nạt, đe dọa hoặc quấy rối người khác.
+- Nội dung khuyến khích hành vi phạm pháp hoặc sử dụng chất cấm.",example
+,3,Suicide,"Nội dung đề cập đến hành vi tự tử, ý định tự tử, hoặc mô tả chi tiết các phương pháp tự tử, có thể gây ảnh hưởng tiêu cực đến người xem, đặc biệt là trẻ em và thanh thiếu niên.","- Video mô tả hoặc tái hiện hành vi tự tử.
+- Hành vi tự gây hại hoặc khuyến khích người khác tự gây hại.
+- Nội dung chia sẻ ý định tự tử hoặc cảm xúc tuyệt vọng mà không có thông điệp hỗ trợ hoặc khuyến khích tìm kiếm sự giúp đỡ.
+- Hướng dẫn hoặc mô tả chi tiết các phương pháp tự tử.
+- Nội dung ca ngợi hoặc lãng mạn hóa hành vi tự tử.",example
+,4,Safe ,"Nội dung phù hợp và an toàn cho trẻ em, không chứa yếu tố bạo lực, tình dục, ngôn ngữ thô tục hoặc hành vi nguy hiểm.","- Video hoạt hình, chương trình giáo dục hoặc giải trí dành cho trẻ em.
+- Nội dung về nghệ thuật, âm nhạc, thể thao hoặc sở thích lành mạnh.
+- Video gia đình, thú cưng hoặc hoạt động ngoài trời an toàn.
+- Nội dung hướng dẫn kỹ năng sống hoặc học tập phù hợp với lứa tuổi.",example
+,,,,,
+,,"Lưu ý: Với 1 video chỉ chọn 1 trong 4 nhãn, một video có hơn 1 nhãn là invalid",,,
+,,"Confuse: Cứ việc chọn theo cảm quan, bên cạnh đó đánh tick thêm confused",,,
