@@ -1470,13 +1470,14 @@
                             let username = parts[0];
                             let vid = parts[1];
                             let tiktokUrl = `https://www.tiktok.com/@${username}/video/${vid}`;
-                            let thumbUrl = `https://www.tiktok.com/api/img/?itemId=${vid}`;
+                            // Hiển thị blockquote TikTok thay vì thumbnail
                             videoHtml = `
                                 <div style='margin-top:10px;'>
-                                    <a href='${tiktokUrl}' target='_blank' style='text-decoration:none;'>
-                                        <img src='${thumbUrl}' alt='TikTok thumbnail' style='width:180px;border-radius:8px;display:block;margin:auto;'>
-                                        <div style='text-align:center;color:#007bff;margin-top:4px;'>Xem video ví dụ trên TikTok</div>
-                                    </a>
+                                    <blockquote class="tiktok-embed" cite="${tiktokUrl}" data-video-id="${vid}" style="max-width: 320px; min-width: 220px; margin: 0 auto;">
+                                        <section>
+                                            <a target="_blank" href="${tiktokUrl}">Xem video ví dụ trên TikTok</a>
+                                        </section>
+                                    </blockquote>
                                 </div>
                             `;
                         }
@@ -1489,6 +1490,15 @@
                 });
                 document.getElementById('guidelineCards').innerHTML = html;
                 document.getElementById('guidelineNote').innerHTML = notes.map(n => `<div style='margin-bottom:4px;'>${n}</div>`).join('');
+                // Tự động load TikTok embed script nếu có blockquote
+                if (document.querySelector('.tiktok-embed')) {
+                    const existingScript = document.querySelector('script[src*="tiktok.com/embed.js"]');
+                    if (existingScript) existingScript.remove();
+                    const script = document.createElement('script');
+                    script.src = 'https://www.tiktok.com/embed.js';
+                    script.async = true;
+                    document.head.appendChild(script);
+                }
             } catch (e) {
                 document.getElementById('guidelineCards').innerHTML = '<i>Không thể tải guideline.</i>';
             }
