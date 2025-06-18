@@ -678,11 +678,11 @@
                     </div>
                     
                     <div class="video-tabs">
-                        <button class="tab-btn active" onclick="switchTab('smart')">🎯 Smart</button>
-                        <button class="tab-btn" onclick="switchTab('oembed')">🎬 oEmbed</button>
-                        <button class="tab-btn" onclick="switchTab('blockquote')">📺 Block</button>
-                        <button class="tab-btn" onclick="switchTab('download')">⬇️ Local</button>
-                        <button class="tab-btn" onclick="switchTab('external')">🔗 Link</button>
+                        <button class="tab-btn active" onclick="switchTab('smart', event)">🎯 Smart</button>
+                        <button class="tab-btn" onclick="switchTab('oembed', event)">🎬 oEmbed</button>
+                        <button class="tab-btn" onclick="switchTab('blockquote', event)">📺 Block</button>
+                        <button class="tab-btn" onclick="switchTab('download', event)">⬇️ Local</button>
+                        <button class="tab-btn" onclick="switchTab('external', event)">🔗 Link</button>
                     </div>
 
                     <!-- Smart Auto Tab -->
@@ -892,7 +892,7 @@
             loadVideo(0);
             setTimeout(() => {
                 // Tự động nhúng video đầu tiên bằng smartLoadVideo
-                switchTab('smart');
+                switchTab('smart', null);
                 smartLoadVideo();
             }, 200);
         }
@@ -1008,7 +1008,7 @@
                 playerContainer.style.display = 'block';
                 // Tự động nhúng video khi chuyển
                 setTimeout(() => {
-                    switchTab('smart');
+                    switchTab('smart', null);
                     smartLoadVideo();
                 }, 200);
             } else {
@@ -1031,9 +1031,15 @@
         }
 
         // Tab switching
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            if (event && event.target) event.target.classList.add('active');
+            else {
+                // Nếu gọi từ JS, active tab-btn theo tabName
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    if (btn.textContent.toLowerCase().includes(tabName)) btn.classList.add('active');
+                });
+            }
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tabName + 'Tab').classList.add('active');
         }
@@ -1473,18 +1479,19 @@
                             let username = parts[0];
                             let vid = parts[1];
                             let tiktokUrl = `https://www.tiktok.com/@${username}/video/${vid}`;
+                            // Fallback: hiển thị thumbnail + link
+                            let thumbUrl = `https://p16-sign-va.tiktokcdn.com/obj/tos-maliva-p-0068/${vid}_~tplv-tiktok-play.jpeg`;
                             videoHtml = `
-                                <blockquote class="tiktok-embed" cite="${tiktokUrl}" data-video-id="${vid}" style="max-width: 220px; min-width: 180px; margin: 10px auto;">
-                                    <section> <a target="_blank" href="${tiktokUrl}">Xem video ví dụ</a> </section>
-                                </blockquote>
+                                <div style='margin-top:10px;'>
+                                    <a href='${tiktokUrl}' target='_blank' style='text-decoration:none;'>
+                                        <img src='${thumbUrl}' alt='TikTok thumbnail' style='width:180px;border-radius:8px;display:block;margin:auto;'>
+                                        <div style='text-align:center;color:#007bff;margin-top:4px;'>Xem video ví dụ trên TikTok</div>
+                                    </a>
+                                </div>
                             `;
                         }
                     }
-                    html += `<div style="background:${colors[idx%colors.length]};border-radius:12px;padding:18px 20px;min-width:220px;max-width:340px;box-shadow:0 2px 8px #0001;flex:1 1 260px;">
-                        <div style='font-size:1.3em;font-weight:700;margin-bottom:8px;'>${icons[idx%icons.length]} ${row.label}</div>
-                        <div style='margin-bottom:8px;'><b>Định nghĩa:</b> <span style='color:#333;'>${row.def}</span></div>
-                        <div style='font-size:0.98em;'><b>Ví dụ:</b><br><span style='color:#555;'>${row.example}</span>${videoHtml}</div>
-                    </div>`;
+                    html += `<div style=\"background:${colors[idx%colors.length]};border-radius:12px;padding:18px 20px;min-width:220px;max-width:340px;box-shadow:0 2px 8px #0001;flex:1 1 260px;\">\n                        <div style='font-size:1.3em;font-weight:700;margin-bottom:8px;'>${icons[idx%icons.length]} ${row.label}</div>\n                        <div style='margin-bottom:8px;'><b>Định nghĩa:</b> <span style='color:#333;'>${row.def}</span></div>\n                        <div style='font-size:0.98em;'><b>Ví dụ:</b><br><span style='color:#555;'>${row.example}</span>${videoHtml}</div>\n                    </div>`;
                 });
                 document.getElementById('guidelineCards').innerHTML = html;
                 // Hiển thị ghi chú cuối
