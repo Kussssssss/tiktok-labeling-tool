@@ -1468,13 +1468,16 @@
                 data.forEach((row, idx) => {
                     let videoHtml = '';
                     if (row.link && row.link.length > 5) {
-                        // Tách username và id
                         let parts = row.link.split('_');
                         if (parts.length === 2) {
                             let username = parts[0];
                             let vid = parts[1];
                             let tiktokUrl = `https://www.tiktok.com/@${username}/video/${vid}`;
-                            videoHtml = `<div style='margin-top:10px;'><iframe src='${tiktokUrl}' width='220' height='390' style='border-radius:10px;border:none;' allowfullscreen></iframe></div>`;
+                            videoHtml = `
+                                <blockquote class="tiktok-embed" cite="${tiktokUrl}" data-video-id="${vid}" style="max-width: 220px; min-width: 180px; margin: 10px auto;">
+                                    <section> <a target="_blank" href="${tiktokUrl}">Xem video ví dụ</a> </section>
+                                </blockquote>
+                            `;
                         }
                     }
                     html += `<div style="background:${colors[idx%colors.length]};border-radius:12px;padding:18px 20px;min-width:220px;max-width:340px;box-shadow:0 2px 8px #0001;flex:1 1 260px;">
@@ -1486,6 +1489,14 @@
                 document.getElementById('guidelineCards').innerHTML = html;
                 // Hiển thị ghi chú cuối
                 document.getElementById('guidelineNote').innerHTML = notes.map(n => `<div style='margin-bottom:4px;'>${n}</div>`).join('');
+                // Chèn script TikTok embed nếu chưa có
+                if (!document.getElementById('tiktok-embed-script')) {
+                    const script = document.createElement('script');
+                    script.id = 'tiktok-embed-script';
+                    script.src = 'https://www.tiktok.com/embed.js';
+                    script.async = true;
+                    document.head.appendChild(script);
+                }
             } catch (e) {
                 document.getElementById('guidelineCards').innerHTML = '<i>Không thể tải guideline.</i>';
             }
