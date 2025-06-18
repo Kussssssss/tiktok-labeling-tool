@@ -1037,11 +1037,7 @@
         let originalFile = null;
         let hasUnsavedChanges = false;
         let permissionRequested = false;
-
-        // Reset file input value when clicking
-        document.getElementById('csvFile').addEventListener('click', function(e) {
-            this.value = ''; // Reset file input
-        });
+        let isProcessingFile = false;
 
         // Add permission request dialog
         function showPermissionDialog() {
@@ -1122,6 +1118,14 @@
             const file = e.target.files[0];
             if (!file) return;
 
+            // Prevent multiple simultaneous file processing
+            if (isProcessingFile) {
+                showNotification('⚠️ Đang xử lý file, vui lòng đợi...', 'error');
+                return;
+            }
+
+            isProcessingFile = true;
+
             try {
                 // Reset previous data
                 csvData = [];
@@ -1165,6 +1169,8 @@
             } catch (error) {
                 showNotification('❌ Lỗi khi xử lý file: ' + error.message, 'error');
                 resetUI();
+            } finally {
+                isProcessingFile = false;
             }
         });
 
@@ -1184,13 +1190,21 @@
         function readFileContent(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = (e) => reject(new Error('Lỗi khi đọc file'));
+                reader.onload = (e) => {
+                    try {
+                        resolve(e.target.result);
+                    } catch (error) {
+                        reject(new Error('Lỗi khi đọc nội dung file: ' + error.message));
+                    }
+                };
+                reader.onerror = (e) => {
+                    reject(new Error('Lỗi khi đọc file: ' + (e.target.error?.message || 'Unknown error')));
+                };
                 reader.readAsText(file);
             });
         }
 
-        // Parse CSV data
+        // Parse CSV data with better error handling
         function parseCSV(csv) {
             try {
                 const lines = csv.split('\n');
@@ -1199,13 +1213,20 @@
                 }
 
                 const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                if (headers.length === 0) {
+                    throw new Error('File CSV không có header');
+                }
+
                 csvData = [];
+                let errorLines = [];
                 
                 for (let i = 1; i < lines.length; i++) {
-                    if (lines[i].trim()) {
+                    if (!lines[i].trim()) continue;
+
+                    try {
                         const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
                         if (values.length !== headers.length) {
-                            console.warn(`Dòng ${i + 1} có số cột không khớp với header`);
+                            errorLines.push(i + 1);
                             continue;
                         }
                         const row = {};
@@ -1213,11 +1234,18 @@
                             row[header] = values[index] || '';
                         });
                         csvData.push(row);
+                    } catch (error) {
+                        errorLines.push(i + 1);
+                        console.warn(`Lỗi ở dòng ${i + 1}:`, error);
                     }
                 }
 
                 if (csvData.length === 0) {
                     throw new Error('Không có dữ liệu hợp lệ trong file CSV');
+                }
+
+                if (errorLines.length > 0) {
+                    showNotification(`⚠️ Có ${errorLines.length} dòng không hợp lệ (${errorLines.join(', ')})`, 'error');
                 }
 
                 displayVideoList();
@@ -1231,7 +1259,7 @@
                     autoLoadFirstVideo();
                 }
             } catch (error) {
-                showNotification('❌ Lỗi khi xử lý CSV: ' + error.message, 'error');
+                throw new Error('Lỗi khi xử lý CSV: ' + error.message);
             }
         }
 
