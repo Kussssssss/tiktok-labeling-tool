@@ -622,6 +622,12 @@
             <p>Công cụ gắn nhãn video TikTok chuyên nghiệp với Smart Auto-Embed</p>
         </div>
 
+        <!-- Guideline Section -->
+        <div class="upload-section" id="guidelineSection" style="margin-bottom: 20px; background: #fffbe6; border: 1px solid #ffe58f;">
+            <h3 style="color: #d48806; margin-bottom: 10px;">📚 Hướng dẫn gắn nhãn (Guideline)</h3>
+            <div id="guidelineTable" style="overflow-x:auto;"></div>
+        </div>
+
         <div class="upload-section">
             <div class="file-input-wrapper">
                 <input type="file" id="csvFile" accept=".csv" />
@@ -1015,9 +1021,9 @@
             document.getElementById(tabName + 'Tab').classList.add('active');
         }
 
-        // Smart Auto Method
+        // Smart Auto Method: chỉ thử nhúng video hiện tại, không thử toàn bộ danh sách
         async function smartLoadVideo() {
-            if (csvData.length === 0) return;
+            if (!currentVideoUrl) return;
             const container = document.getElementById('smartContainer');
             const progress = document.getElementById('smartProgress');
             progress.style.display = 'block';
@@ -1025,44 +1031,62 @@
             document.querySelectorAll('.progress-step').forEach(step => {
                 step.className = 'progress-step';
             });
-            let statusTable = '<table style="width:100%;color:#222;background:rgba(255,255,255,0.95);border-radius:10px;overflow:hidden;font-size:0.98em;">';
-            statusTable += '<tr style="background:#f3f3f3;"><th style="padding:8px;">#</th><th style="padding:8px;">Username</th><th style="padding:8px;">ID Video</th><th style="padding:8px;">Trạng thái</th></tr>';
-            for (let i = 0; i < csvData.length; i++) {
-                const row = csvData[i];
-                const videoId = row.id_video;
-                let status = '<span style="color:#888;">Đang thử...</span>';
-                statusTable += `<tr id="row-status-${i}"><td style="padding:8px;">${i+1}</td><td style="padding:8px;">${row.username || ''}</td><td style="padding:8px;">${videoId}</td><td style="padding:8px;">${status}</td></tr>`;
-            }
-            statusTable += '</table>';
-            container.innerHTML = statusTable;
-            function updateStatus(index, html) {
-                const row = document.getElementById('row-status-' + index);
-                if (row) row.cells[3].innerHTML = html;
-            }
-            for (let i = 0; i < csvData.length; i++) {
-                const row = csvData[i];
-                const videoId = row.id_video;
-                const videoUrl = videoId ? `https://www.tiktok.com/@tiktok/video/${videoId}` : null;
-                if (!videoId) {
-                    updateStatus(i, '<span style="color:#dc3545;">Không có ID</span>');
-                    continue;
-                }
-                let blockquoteResult = await tryBlockquoteMethodSmart(videoId, videoUrl);
+            try {
+                // Ưu tiên thử Blockquote trước
+                document.getElementById('step2').classList.add('active');
+                await new Promise(resolve => setTimeout(resolve, 400));
+                const blockquoteResult = await tryBlockquoteMethod();
                 if (blockquoteResult.success) {
-                    updateStatus(i, '<span style="color:#28a745;">Blockquote OK</span> <button onclick="loadVideo(' + i + ')">Xem</button>');
-                    continue;
+                    document.getElementById('step2').classList.remove('active');
+                    document.getElementById('step2').classList.add('success');
+                    container.innerHTML = blockquoteResult.html;
+                    await loadEmbedScript();
+                    return;
                 }
-                let oembedResult = await tryOEmbedMethodSmart(videoUrl);
+                document.getElementById('step2').classList.remove('active');
+                document.getElementById('step2').classList.add('failed');
+                // Thử oEmbed
+                document.getElementById('step1').classList.add('active');
+                await new Promise(resolve => setTimeout(resolve, 400));
+                const oembedResult = await tryOEmbedMethod();
                 if (oembedResult.success) {
-                    updateStatus(i, '<span style="color:#007bff;">oEmbed OK</span> <button onclick="loadVideo(' + i + ')">Xem</button>');
-                    continue;
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step1').classList.add('success');
+                    container.innerHTML = oembedResult.html;
+                    await loadEmbedScript();
+                    return;
                 }
-                updateStatus(i, '<span style="color:#ff0050;">Không nhúng được</span> <button onclick="loadVideo(' + i + ')">Xem</button>');
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step1').classList.add('failed');
+                // Fallback external
+                document.getElementById('step3').classList.add('active');
+                await new Promise(resolve => setTimeout(resolve, 400));
+                document.getElementById('step3').classList.remove('active');
+                document.getElementById('step3').classList.add('success');
+                container.innerHTML = `
+                    <div class="error-container">
+                        <div style="font-size: 2em; margin-bottom: 15px;">🔗</div>
+                        <div><strong>Embed không khả dụng</strong></div>
+                        <div style="margin: 15px 0;">Không thể nhúng video này do chính sách của TikTok hoặc lỗi kỹ thuật.</div>
+                        <button onclick="window.open('${currentVideoUrl}', '_blank')" style="padding: 10px 20px; background: #ff0050; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight:600; font-size:1em;">
+                            Mở video trên TikTok
+                        </button>
+                        <div style="margin-top:10px; font-size:0.95em; color:#555;">Bạn vẫn có thể xem video này trực tiếp trên TikTok.</div>
+                    </div>
+                `;
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="error-container">
+                        <div style="font-size: 2em; margin-bottom: 15px;">❌</div>
+                        <div>Lỗi khi tự động tải video</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">Thử các tab khác hoặc dùng External</div>
+                    </div>
+                `;
             }
         }
 
         // Blockquote thử nhanh (không render lên DOM)
-        async function tryBlockquoteMethodSmart(videoId, videoUrl) {
+        async function tryBlockquoteMethod() {
             try {
                 // Chỉ kiểm tra khả năng nhúng bằng fetch oEmbed (TikTok không có API check blockquote, nên luôn trả về true)
                 // Thực tế, blockquote chỉ fail nếu TikTok chặn nhúng, nhưng không có API check, nên luôn trả về success
@@ -1073,9 +1097,9 @@
         }
 
         // oEmbed thử nhanh (không render lên DOM)
-        async function tryOEmbedMethodSmart(videoUrl) {
+        async function tryOEmbedMethod() {
             try {
-                const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(videoUrl)}`;
+                const oembedUrl = `https://www.tiktok.com/oembed?url=${encodeURIComponent(currentVideoUrl)}`;
                 const response = await fetch(oembedUrl);
                 if (!response.ok) throw new Error();
                 const data = await response.json();
@@ -1398,8 +1422,39 @@
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
+        // Load and display guideline from Guideline.csv
+        async function loadGuideline() {
+            try {
+                const response = await fetch('Guideline.csv');
+                const text = await response.text();
+                const lines = text.split('\n').filter(line => line.trim().length > 0 && !line.startsWith(','));
+                let data = [];
+                for (let i = 0; i < lines.length; i++) {
+                    const cols = lines[i].split(',');
+                    if (cols[1] && cols[2] && cols[3]) {
+                        data.push({
+                            label: cols[2].trim(),
+                            def: cols[3].replace(/"/g, '').trim(),
+                            example: (cols[4] || '').replace(/"/g, '').trim()
+                        });
+                    }
+                }
+                let html = '<table style="width:100%;border-collapse:collapse;font-size:0.98em;">';
+                html += '<tr style="background:#fffbe6;"><th style="border:1px solid #ffe58f;padding:8px;">Label</th><th style="border:1px solid #ffe58f;padding:8px;">Định nghĩa</th><th style="border:1px solid #ffe58f;padding:8px;">Ví dụ</th></tr>';
+                data.forEach(row => {
+                    html += `<tr><td style="border:1px solid #ffe58f;padding:8px;font-weight:600;">${row.label}</td><td style="border:1px solid #ffe58f;padding:8px;">${row.def}</td><td style="border:1px solid #ffe58f;padding:8px;white-space:pre-line;">${row.example}</td></tr>`;
+                });
+                html += '</table>';
+                html += '<div style="margin-top:10px;color:#d48806;font-size:0.95em;"><b>Lưu ý:</b> Với 1 video chỉ chọn 1 trong 4 nhãn, một video có hơn 1 nhãn là <b>invalid</b>.<br>Confuse: Cứ việc chọn theo cảm quan, bên cạnh đó đánh tick thêm confused.</div>';
+                document.getElementById('guidelineTable').innerHTML = html;
+            } catch (e) {
+                document.getElementById('guidelineTable').innerHTML = '<i>Không thể tải guideline.</i>';
+            }
+        }
+
         // Initialize on load
         console.log('TikTok Video Labeling Tool v2.0 loaded successfully!');
+        loadGuideline();
     </script>
 </body>
 </html>
