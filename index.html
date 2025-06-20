@@ -5,827 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TikTok Video Labeling Tool v2.1</title>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: #333;
-            line-height: 1.6;
-        }
-
-        .container {
-            max-width: 1400px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* Header Styles */
-        .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .header h1 {
-            color: #4a5568;
-            margin-bottom: 12px;
-            font-size: 2.2em;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .version-badge {
-            background: linear-gradient(45deg, #ff0050, #ff4081);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 18px;
-            font-size: 0.85em;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(255, 0, 80, 0.3);
-        }
-
-        /* Upload Section */
-        .upload-section {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            display: inline-block;
-            cursor: pointer;
-            background: linear-gradient(45deg, #667eea, #764ba2);
-            color: white;
-            padding: 12px 24px;
-            border-radius: 10px;
-            transition: all 0.3s ease;
-            margin-right: 12px;
-            font-weight: 600;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .file-input-wrapper:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .file-input-wrapper input[type="file"] {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
-            cursor: pointer;
-        }
-
-        /* Stats Section */
-        .stats {
-            display: flex;
-            gap: 15px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
-        .stat-card {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            padding: 18px 20px;
-            border-radius: 12px;
-            text-align: center;
-            flex: 1;
-            min-width: 140px;
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
-        }
-
-        .stat-card div:first-child {
-            font-size: 1.6em;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
-
-        /* IMPROVED MAIN CONTENT LAYOUT */
-        .main-content {
-            display: grid;
-            grid-template-columns: 380px 1fr 320px;
-            grid-template-areas: "video-list player-section controls";
-            gap: 20px;
-            align-items: start;
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            min-height: 800px;
-        }
-
-        /* Video List - Left Column */
-        .video-list {
-            grid-area: video-list;
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border: 1px solid #eee;
-            padding: 20px;
-            height: 800px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .video-list h3 {
-            color: #2c3e50;
-            margin-bottom: 16px;
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f8f9fa;
-        }
-
-        .video-list-container {
-            flex: 1;
-            overflow-y: auto;
-            margin: 0 -8px 0 0;
-            padding-right: 8px;
-        }
-
-        .video-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 14px;
-            margin-bottom: 8px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-left: 4px solid transparent;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        }
-
-        .video-item:hover {
-            background: #e9ecef;
-            transform: translateX(4px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .video-item.active {
-            background: #e3f2fd;
-            border-left-color: #2196F3;
-            box-shadow: 0 4px 15px rgba(33, 150, 243, 0.2);
-        }
-
-        .video-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .video-filename {
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 4px;
-            font-size: 0.9em;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .video-labels {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
-
-        .label-tag {
-            background: #6c757d;
-            color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 0.7em;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .label-tag.active {
-            background: #dc3545;
-        }
-
-        .label-tag.safe {
-            background: #28a745;
-        }
-
-        /* Player Section - Center Column */
-        .player-section {
-            grid-area: player-section;
-            background: #fff;
-            border-radius: 18px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.10);
-            border: 1px solid #eee;
-            padding: 25px;
-            height: 800px;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
-        .current-video-info {
-            text-align: center;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-            font-size: 0.95em;
-        }
-
-        .navigation-buttons {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
-        }
-
-        .nav-btn {
-            flex: 1;
-            padding: 12px 16px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 0.9em;
-        }
-
-        .nav-btn.prev {
-            background: #6c757d;
-            color: white;
-        }
-
-        .nav-btn.next {
-            background: #28a745;
-            color: white;
-        }
-
-        .nav-btn:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .nav-btn:disabled {
-            background: #e9ecef;
-            color: #6c757d;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Video Player Container */
-        .video-player-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            border-radius: 12px;
-            min-height: 500px;
-            margin-bottom: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* Accordion for methods */
-        .accordion {
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            background: #f8f9fa;
-        }
-
-        .accordion-header {
-            background: #764ba2;
-            color: #fff;
-            padding: 14px 20px;
-            font-size: 1em;
-            font-weight: 600;
-            cursor: pointer;
-            user-select: none;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .accordion-header .arrow {
-            transition: transform 0.2s;
-            font-size: 1.1em;
-        }
-
-        .accordion-header.collapsed .arrow {
-            transform: rotate(-90deg);
-        }
-
-        .accordion-content {
-            padding: 16px 20px;
-            display: block;
-            animation: fadeIn 0.3s;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .accordion-content.collapsed {
-            display: none;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* Controls Panel - Right Column */
-        .controls-panel {
-            grid-area: controls;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            height: 800px;
-        }
-
-        .labeling-controls {
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border: 1px solid #eee;
-            padding: 20px;
-            flex: 1;
-            overflow-y: auto;
-        }
-
-        .labeling-controls h3 {
-            color: #2c3e50;
-            margin-bottom: 16px;
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #f8f9fa;
-        }
-
-        .label-groups {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-        }
-
-        .label-group {
-            background: #f8f9fa;
-            padding: 16px;
-            border-radius: 10px;
-            border-left: 4px solid #667eea;
-            transition: all 0.3s ease;
-        }
-
-        .label-group:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .label-group h4 {
-            margin-bottom: 12px;
-            color: #495057;
-            font-size: 0.95em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            cursor: pointer;
-            padding: 6px 8px;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-
-        .checkbox-wrapper:hover {
-            background: rgba(0, 0, 0, 0.04);
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            margin-right: 8px;
-            transform: scale(1.1);
-            cursor: pointer;
-        }
-
-        .checkbox-wrapper label {
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-
-        /* Export Section */
-        .export-section {
-            background: #fff;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            border: 1px solid #eee;
-            padding: 20px;
-        }
-
-        .export-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(45deg, #28a745, #20c997);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-size: 0.95em;
-        }
-
-        .export-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.3);
-        }
-
-        /* Progress Bar */
-        .progress-bar {
-            width: 100%;
-            height: 6px;
-            background: #e9ecef;
-            border-radius: 3px;
-            margin: 12px 0;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            transition: width 0.3s ease;
-            border-radius: 3px;
-        }
-
-        /* Tab Styles */
-        .video-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 12px;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 4px;
-            border-radius: 8px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            border: none;
-            padding: 8px 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 500;
-            font-size: 0.8em;
-        }
-
-        .tab-btn.active, .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Embed Options */
-        .embed-options {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .embed-btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: none;
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.8em;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .embed-btn.primary {
-            background: #ff0050;
-            color: white;
-            font-weight: 600;
-            padding: 10px 16px;
-            box-shadow: 0 3px 12px rgba(255, 0, 80, 0.3);
-        }
-
-        .embed-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
-        }
-
-        .embed-btn.primary:hover {
-            background: #e6004a;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(255, 0, 80, 0.4);
-        }
-
-        /* Embed Container */
-        .embed-container {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .embed-placeholder {
-            text-align: center;
-            color: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            max-width: 300px;
-        }
-
-        .placeholder-icon {
-            font-size: 2.5em;
-            margin-bottom: 12px;
-            opacity: 0.9;
-        }
-
-        .placeholder-note {
-            font-size: 0.8em;
-            margin-top: 8px;
-            opacity: 0.7;
-            line-height: 1.4;
-        }
-
-        /* TikTok Embed */
-        .tiktok-embed {
-            max-width: 100% !important;
-            min-width: 280px !important;
-            margin: 0 auto;
-        }
-
-        /* Loading Spinner */
-        .loading-spinner {
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 3px solid white;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Guideline Section */
-        .guideline-section {
-            background: #fffbe6;
-            border: 1px solid #ffe58f;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .guideline-section h3 {
-            color: #d48806;
-            margin-bottom: 16px;
-            font-size: 1.2em;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Error and Success Containers */
-        .error-container {
-            text-align: center;
-            padding: 20px;
-            color: #ff6b6b;
-            background: rgba(255, 107, 107, 0.1);
-            border-radius: 10px;
-            border-left: 4px solid #ff6b6b;
-            margin: 15px 0;
-            font-size: 0.9em;
-        }
-
-        .success-container {
-            text-align: center;
-            padding: 20px;
-            color: #28a745;
-            background: rgba(40, 167, 69, 0.1);
-            border-radius: 10px;
-            border-left: 4px solid #28a745;
-            margin: 15px 0;
-            font-size: 0.9em;
-        }
-
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 1000;
-            font-weight: 600;
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9em;
-        }
-
-        .notification.success {
-            background: #28a745;
-            color: white;
-        }
-
-        .notification.error {
-            background: #dc3545;
-            color: white;
-        }
-
-        .notification.show {
-            transform: translateX(0);
-        }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 3px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #666;
-        }
-
-        /* RESPONSIVE DESIGN */
-        @media (max-width: 1200px) {
-            .main-content {
-                grid-template-columns: 1fr;
-                grid-template-areas: 
-                    "player-section"
-                    "controls"
-                    "video-list";
-                gap: 16px;
-            }
-            
-            .video-list,
-            .player-section,
-            .controls-panel {
-                height: auto;
-                min-height: unset;
-            }
-            
-            .video-list {
-                max-height: 400px;
-            }
-            
-            .player-section {
-                min-height: 700px;
-            }
-            
-            .controls-panel {
-                flex-direction: row;
-                gap: 16px;
-            }
-            
-            .labeling-controls,
-            .export-section {
-                flex: 1;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .container {
-                padding: 0 12px;
-            }
-
-            .header {
-                padding: 18px;
-            }
-
-            .header h1 {
-                font-size: 1.8em;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .stats {
-                flex-direction: column;
-            }
-
-            .stat-card {
-                width: 100%;
-            }
-            
-            .controls-panel {
-                flex-direction: column;
-            }
-            
-            .main-content {
-                gap: 12px;
-            }
-            
-            .navigation-buttons {
-                flex-direction: column;
-                gap: 6px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .video-tabs {
-                flex-wrap: wrap;
-            }
-            
-            .tab-btn {
-                flex: 1 1 45%;
-                font-size: 0.75em;
-                padding: 6px 8px;
-            }
-            
-            .embed-options {
-                flex-direction: column;
-            }
-            
-            .embed-btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>🎥 TikTok Video Labeling Tool <span class="version-badge">v2.1</span></h1>
             <p>Công cụ gắn nhãn video TikTok chuyên nghiệp với giao diện được tối ưu</p>
+            <div style="position: absolute; top: 18px; right: 32px;">
+                <button id="themeToggleBtn" title="Chuyển chế độ sáng/tối" style="background: none; border: none; font-size: 1.5em; cursor: pointer;">🌙</button>
+            </div>
+        </div>
+
+        <!-- Thông báo phím tắt -->
+        <div id="shortcutHint" style="background: #e6f7ff; color: #222; border: 1.5px solid #91d5ff; border-radius: 10px; padding: 14px 18px; margin: 0 auto 18px auto; max-width: 700px; font-size: 1.04em; display: flex; align-items: center; gap: 12px; position: relative;">
+            <span style="font-size:1.3em;">⌨️</span>
+            <span><b>Mẹo:</b> Bạn có thể sử dụng các <b>phím tắt</b> để gắn nhãn nhanh:
+                <br>
+                <span style="display:inline-block;margin-top:2px;">
+                    <b>Ctrl+1</b> (Harmful), <b>Ctrl+2</b> (Suicide), <b>Ctrl+3</b> (Adult), <b>Ctrl+4</b> (Safe), <b>Ctrl+5</b> (Confuse), <b>Ctrl+6</b> (Empty), <b>Ctrl+S</b> (Xuất CSV), <b>←</b>/<b>→</b> (chuyển video)
+                </span>
+            </span>
+            <button onclick="document.getElementById('shortcutHint').style.display='none'" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:1.2em;cursor:pointer;color:#888;">✖</button>
         </div>
 
         <!-- Guideline Section -->
@@ -972,53 +173,42 @@
             <div class="controls-panel">
                 <div class="labeling-controls">
                     <h3>🏷️ Gắn nhãn</h3>
-                    <div class="label-groups" id="labelingControls" style="display: none;">
-                        <div class="label-group">
-                            <h4>🚫 Nội dung có hại</h4>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="harmfulContent" onchange="updateLabels()">
-                                <label for="harmfulContent">Harmful Content</label>
+                    <div class="label-groups" id="labelingControls" style="display: none; flex-direction: column; gap: 18px;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;">
+                            <button class="label-btn harmful" title="Ctrl+1: Nội dung có hại" onclick="setLabel('Harmful Content')">
+                                <span class="label-icon">🚫</span>
+                                <span class="label-text">Harmful<br><small>(Ctrl+1)</small></span>
+                            </button>
+                            <button class="label-btn suicide" title="Ctrl+2: Tự sát" onclick="setLabel('Suicide')">
+                                <span class="label-icon">🆘</span>
+                                <span class="label-text">Suicide<br><small>(Ctrl+2)</small></span>
+                            </button>
+                            <button class="label-btn adult" title="Ctrl+3: Nội dung người lớn" onclick="setLabel('Adult Content')">
+                                <span class="label-icon">🔞</span>
+                                <span class="label-text">Adult<br><small>(Ctrl+3)</small></span>
+                            </button>
+                            <button class="label-btn safe" title="Ctrl+4: An toàn" onclick="setLabel('Safe')">
+                                <span class="label-icon">✅</span>
+                                <span class="label-text">Safe<br><small>(Ctrl+4)</small></span>
+                            </button>
+                            <button class="label-btn confuse" title="Ctrl+5: Phân vân" onclick="setLabel('confuse')">
+                                <span class="label-icon">🤔</span>
+                                <span class="label-text">Confuse<br><small>(Ctrl+5)</small></span>
+                            </button>
+                            <button class="label-btn empty" title="Ctrl+6: Không khả dụng" onclick="setLabel('Empty')">
+                                <span class="label-icon">❌</span>
+                                <span class="label-text">Empty<br><small>(Ctrl+6)</small></span>
+                            </button>
                             </div>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="suicide" onchange="updateLabels()">
-                                <label for="suicide">Suicide</label>
+                        <div style="margin-top: 10px; text-align: center;">
+                            <label style="font-size: 0.98em; cursor: pointer;">
+                                <input type="checkbox" id="autoNextToggle" style="margin-right: 6px; vertical-align: middle;"> Tự động chuyển video tiếp theo sau khi gắn nhãn
+                            </label>
                             </div>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="adultContent" onchange="updateLabels()">
-                                <label for="adultContent">Adult Content</label>
-                            </div>
-                        </div>
-                        
-                        <div class="label-group">
-                            <h4>✅ An toàn</h4>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="safe" onchange="updateLabels()">
-                                <label for="safe">Safe</label>
-                            </div>
-                        </div>
-
-                        <div class="label-group">
-                            <h4>🤔 Phân vân</h4>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="confuse" onchange="updateLabels()">
-                                <label for="confuse">Confuse</label>
-                            </div>
-                        </div>
-
-                        <div class="label-group">
-                            <h4>❌ Không khả dụng</h4>
-                            <div class="checkbox-wrapper">
-                                <input type="checkbox" id="empty" onchange="updateLabels()">
-                                <label for="empty">Empty (Video đã bị xóa/không khả dụng)</label>
+                        <div style="margin-top: 18px; text-align: center;">
+                            <button class="export-btn" onclick="exportCSV()" id="exportBtn2">💾 Xuất kết quả CSV</button>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <div class="export-section">
-                    <button class="export-btn" onclick="exportCSV()">
-                        💾 Xuất kết quả CSV
-                    </button>
                 </div>
             </div>
         </div>
@@ -1044,61 +234,42 @@
         let permissionRequested = false;
         let isProcessingFile = false;
 
+        // Add data backup variables at the top of the script
+        let originalCsvContent = null;
+        let initialDataLoaded = false;
+
+        // Add auto-save optimization variables
+        let saveBuffer = [];
+        let lastSaveOperation = null;
+        let saveTimeout = null;
+        const SAVE_DELAY = 1000; // 1 second
+        const MAX_BUFFER_SIZE = 3; // Save after 3 changes
+        const AUTO_SAVE_INTERVAL = 300000; // 5 minutes
+
         // Add permission request dialog
         function showPermissionDialog() {
             return new Promise((resolve) => {
                 const dialog = document.createElement('div');
-                dialog.style.cssText = `
-                    position: fixed;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: white;
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-                    z-index: 1000;
-                    max-width: 400px;
-                    width: 90%;
-                `;
-                
+                dialog.className = 'permission-dialog';
+                dialog.style.position = 'fixed';
+                dialog.style.top = '50%';
+                dialog.style.left = '50%';
+                dialog.style.transform = 'translate(-50%, -50%)';
                 dialog.innerHTML = `
-                    <h3 style="margin-bottom: 15px; color: #2c3e50;">Yêu cầu quyền truy cập file</h3>
-                    <p style="margin-bottom: 20px; color: #4a5568; line-height: 1.5;">
-                        Để tự động lưu các thay đổi, chúng tôi cần quyền truy cập vào file của bạn.
+                    <h3>Yêu cầu quyền truy cập file</h3>
+                    <p style="margin-bottom: 20px; line-height: 1.5;">
+                        Để tự động lưu các thay đổi, chúng tôi cần quyền truy cập vào file của bạn.<br>
                         Nếu bạn từ chối, các thay đổi sẽ được lưu tạm thời và bạn cần xuất file thủ công.
                     </p>
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
-                        <button id="denyPermission" style="
-                            padding: 8px 16px;
-                            border: 1px solid #e2e8f0;
-                            border-radius: 6px;
-                            background: #f8fafc;
-                            color: #4a5568;
-                            cursor: pointer;
-                        ">Từ chối</button>
-                        <button id="grantPermission" style="
-                            padding: 8px 16px;
-                            border: none;
-                            border-radius: 6px;
-                            background: #4299e1;
-                            color: white;
-                            cursor: pointer;
-                        ">Đồng ý</button>
+                        <button id="denyPermission">Từ chối</button>
+                        <button id="grantPermission">Đồng ý</button>
                     </div>
                 `;
 
                 // Add overlay
                 const overlay = document.createElement('div');
-                overlay.style.cssText = `
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background: rgba(0,0,0,0.5);
-                    z-index: 999;
-                `;
+                overlay.className = 'permission-overlay';
 
                 document.body.appendChild(overlay);
                 document.body.appendChild(dialog);
@@ -1118,12 +289,11 @@
             });
         }
 
-        // File input event listener
+        // Modify file input handler
         document.getElementById('csvFile').addEventListener('change', async function(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Prevent multiple simultaneous file processing
             if (isProcessingFile) {
                 showNotification('⚠️ Đang xử lý file, vui lòng đợi...', 'error');
                 return;
@@ -1139,14 +309,15 @@
                 hasUnsavedChanges = false;
                 permissionRequested = false;
 
-                // Read file content
-                const csv = await readFileContent(file);
-                if (!csv) {
+                // Read and store original content
+                originalCsvContent = await readFileContent(file);
+                if (!originalCsvContent) {
                     throw new Error('Không thể đọc nội dung file');
                 }
 
                 // Parse CSV data
-                parseCSV(csv);
+                parseCSV(originalCsvContent);
+                initialDataLoaded = true;
 
                 // Request permission if not already requested
                 if (!permissionRequested) {
@@ -1162,10 +333,20 @@
                                     accept: {'text/csv': ['.csv']},
                                 }],
                             });
-                            showNotification('📂 Đã tải file CSV thành công!', 'success');
+
+                            // Immediately save the original content to the new file
+                            if (initialDataLoaded && originalCsvContent) {
+                                const writable = await fileHandle.createWritable();
+                                await writable.write(originalCsvContent);
+                                await writable.close();
+                                showNotification('📂 Đã tải và lưu file CSV thành công!', 'success');
+                            } else {
+                                throw new Error('Dữ liệu ban đầu không hợp lệ');
+                            }
                         } catch (error) {
-                            console.warn('Không thể lấy quyền truy cập file:', error);
-                            showNotification('⚠️ Không thể lấy quyền truy cập file. Dữ liệu sẽ được lưu tạm thời.', 'error');
+                            console.warn('Không thể lưu file:', error);
+                            showNotification('⚠️ Không thể lưu file. Dữ liệu sẽ được lưu tạm thời.', 'error');
+                            fileHandle = null;
                         }
                     } else {
                         showNotification('ℹ️ Bạn có thể xuất file thủ công khi cần.', 'success');
@@ -1443,15 +624,16 @@
                 const confuseCheckbox = document.getElementById('confuse');
                 const emptyCheckbox = document.getElementById('empty');
 
-                harmfulCheckbox.checked = (row['Harmful Content'] === true || row['Harmful Content'] === 'true' || row['Harmful Content'] === '1');
-                suicideCheckbox.checked = (row['Suicide'] === true || row['Suicide'] === 'true' || row['Suicide'] === '1');
-                adultCheckbox.checked = (row['Adult Content'] === true || row['Adult Content'] === 'true' || row['Adult Content'] === '1');
-                safeCheckbox.checked = (row['Safe'] === true || row['Safe'] === 'true' || row['Safe'] === '1');
-                confuseCheckbox.checked = (row['confuse'] === true || row['confuse'] === 'true' || row['confuse'] === '1');
-                emptyCheckbox.checked = (row['Empty'] === true || row['Empty'] === 'true' || row['Empty'] === '1');
+                if (harmfulCheckbox) harmfulCheckbox.checked = (row['Harmful Content'] === true || row['Harmful Content'] === 'true' || row['Harmful Content'] === '1');
+                if (suicideCheckbox) suicideCheckbox.checked = (row['Suicide'] === true || row['Suicide'] === 'true' || row['Suicide'] === '1');
+                if (adultCheckbox) adultCheckbox.checked = (row['Adult Content'] === true || row['Adult Content'] === 'true' || row['Adult Content'] === '1');
+                if (safeCheckbox) safeCheckbox.checked = (row['Safe'] === true || row['Safe'] === 'true' || row['Safe'] === '1');
+                if (confuseCheckbox) confuseCheckbox.checked = (row['confuse'] === true || row['confuse'] === 'true' || row['confuse'] === '1');
+                if (emptyCheckbox) emptyCheckbox.checked = (row['Empty'] === true || row['Empty'] === 'true' || row['Empty'] === '1');
 
                 document.getElementById('labelingControls').style.display = 'flex';
                 updateNavigationButtons();
+                updateLabelButtonUI(row);
             } catch (error) {
                 showNotification('❌ Lỗi khi tải video: ' + error.message, 'error');
             }
@@ -1721,24 +903,65 @@
         }
 
         // Label management
-        function updateLabels() {
+        function setLabel(label) {
             if (currentVideoIndex >= 0 && currentVideoIndex < csvData.length) {
                 const row = csvData[currentVideoIndex];
-                
-                row['Harmful Content'] = document.getElementById('harmfulContent').checked;
-                row['Suicide'] = document.getElementById('suicide').checked;
-                row['Adult Content'] = document.getElementById('adultContent').checked;
-                row['Safe'] = document.getElementById('safe').checked;
-                row['confuse'] = document.getElementById('confuse').checked;
-                row['Empty'] = document.getElementById('empty').checked;
-
+                // List of main labels (not confuse, not empty)
+                const mainLabels = ['Harmful Content', 'Suicide', 'Adult Content', 'Safe'];
+                if (label === 'confuse') {
+                    // Toggle confuse
+                    row['confuse'] = !row['confuse'];
+                    // If confuse is now true, allow one main label (keep current selection)
+                    // If confuse is now false, do nothing else
+                } else if (label === 'Empty') {
+                    // Only empty is selected
+                    mainLabels.forEach(l => row[l] = false);
+                    row['confuse'] = false;
+                    row['Empty'] = true;
+                } else {
+                    // Select only this main label, keep confuse if it was selected
+                    mainLabels.forEach(l => row[l] = false);
+                    row[label] = true;
+                    row['Empty'] = false;
+                    // If confuse is selected, allow both
+                }
+                // Ensure only one main label is selected at a time
+                let selectedMain = mainLabels.filter(l => row[l]);
+                if (selectedMain.length > 1) {
+                    // Only keep the last selected
+                    mainLabels.forEach(l => row[l] = false);
+                    row[label] = true;
+                }
+                // If empty is selected, all others must be false
+                if (row['Empty']) {
+                    mainLabels.forEach(l => row[l] = false);
+                    row['confuse'] = false;
+                }
                 displayVideoList();
                 updateStats();
-                
                 hasUnsavedChanges = true;
-                // Auto-save after label update
                 autoSave();
+                // Auto next if enabled and not confuse
+                if (document.getElementById('autoNextToggle')?.checked && label !== 'confuse') {
+                    setTimeout(() => nextVideo(), 250);
+                }
+                // Update label button UI
+                updateLabelButtonUI(row);
             }
+        }
+
+        function updateLabelButtonUI(row) {
+            const btns = document.querySelectorAll('.label-btn');
+            btns.forEach(btn => {
+                btn.classList.remove('active', 'selected');
+            });
+            if (!row) return;
+            if (row['Harmful Content']) document.querySelector('.label-btn.harmful')?.classList.add('active');
+            if (row['Suicide']) document.querySelector('.label-btn.suicide')?.classList.add('active');
+            if (row['Adult Content']) document.querySelector('.label-btn.adult')?.classList.add('active');
+            if (row['Safe']) document.querySelector('.label-btn.safe')?.classList.add('active');
+            if (row['confuse']) document.querySelector('.label-btn.confuse')?.classList.add('active');
+            if (row['Empty']) document.querySelector('.label-btn.empty')?.classList.add('active');
         }
 
         function updateStats() {
@@ -1768,40 +991,111 @@
             document.getElementById('progressFill').style.width = progress + '%';
         }
 
-        // Add auto-save function
-        async function autoSave() {
-            if (csvData.length === 0 || !hasUnsavedChanges) return;
-            // Không cho phép lưu nếu số dòng dữ liệu < 1 (chỉ còn header hoặc rỗng)
-            if (csvData.length < 1) {
-                showNotification('❌ Không tự động lưu vì file không có dữ liệu!', 'error');
+        // Add buffer management functions
+        function addToSaveBuffer(change) {
+            if (!change || !change.index) return;
+            
+            // Remove any existing change for the same video
+            saveBuffer = saveBuffer.filter(item => item.index !== change.index);
+            
+            // Add new change
+            saveBuffer.push({
+                index: change.index,
+                data: change.data,
+                timestamp: Date.now()
+            });
+
+            // Schedule save
+            scheduleSave();
+        }
+
+        function scheduleSave() {
+            // Clear existing timeout
+            if (saveTimeout) {
+                clearTimeout(saveTimeout);
+            }
+
+            // If buffer is full, save immediately
+            if (saveBuffer.length >= MAX_BUFFER_SIZE) {
+                performSave();
                 return;
             }
-            // Kiểm tra an toàn: không ghi file nếu số dòng nhỏ hơn ban đầu
-            if (window._originalCsvLineCount && csvData.length < window._originalCsvLineCount) {
-                showNotification('❌ Số dòng dữ liệu hiện tại nhỏ hơn file gốc! Không tự động lưu để tránh mất dữ liệu.', 'error');
-                return;
-            }
+
+            // Schedule new save
+            saveTimeout = setTimeout(() => {
+                if (saveBuffer.length > 0) {
+                    performSave();
+                }
+            }, SAVE_DELAY);
+        }
+
+        async function performSave() {
+            if (saveBuffer.length === 0 || !hasUnsavedChanges) return;
+            if (lastSaveOperation && !lastSaveOperation.isDone) return;
+
+            lastSaveOperation = { isDone: false };
+            const currentOperation = lastSaveOperation;
+
             try {
+                // Apply buffered changes
+                saveBuffer.forEach(change => {
+                    if (change.index >= 0 && change.index < csvData.length) {
+                        csvData[change.index] = { ...csvData[change.index], ...change.data };
+                    }
+                });
+
+                // Validate data integrity
+                if (csvData.length < window._originalCsvLineCount) {
+                    showNotification('⚠️ Phát hiện dữ liệu không hợp lệ, đang khôi phục...', 'error');
+                    if (originalCsvContent) {
+                        parseCSV(originalCsvContent);
+                        showNotification('✅ Đã khôi phục dữ liệu!', 'success');
+                    }
+                    return;
+                }
+
                 const csvContent = generateCSVContent();
+                
                 if (fileHandle) {
                     try {
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(csvContent);
+                        // Create write batch
+                        const writable = await fileHandle.createWritable({
+                            keepExistingData: false
+                        });
+                        const CHUNK_SIZE = 1024 * 1024;
+                        for (let i = 0; i < csvContent.length; i += CHUNK_SIZE) {
+                            const chunk = csvContent.slice(i, i + CHUNK_SIZE);
+                            await writable.write(chunk);
+                        }
                         await writable.close();
                         lastSaveTime = new Date();
                         hasUnsavedChanges = false;
-                        showNotification('💾 Đã tự động lưu!', 'success');
+                        showNotification('💾 Đã lưu ' + saveBuffer.length + ' thay đổi!', 'success');
                     } catch (error) {
                         console.warn('Lỗi khi lưu file:', error);
+                        if (originalCsvContent) {
+                            parseCSV(originalCsvContent);
+                        }
                         fileHandle = null;
                         downloadCSV(csvContent, originalFile ? originalFile.name : 'labeled_tiktok_videos.csv');
+                        showNotification('❌ Lỗi khi lưu file, đã tải file tạm thời!', 'error');
                     }
                 } else if (permissionRequested) {
-                    // Only download if permission was requested and denied
                     downloadCSV(csvContent, originalFile ? originalFile.name : 'labeled_tiktok_videos.csv');
+                    showNotification('💾 Đã lưu file tạm thời!', 'success');
                 }
+
+                // Clear buffer after successful save
+                saveBuffer = [];
             } catch (error) {
-                showNotification('❌ Lỗi khi tự động lưu: ' + error.message, 'error');
+                showNotification('❌ Lỗi khi lưu: ' + error.message, 'error');
+                if (originalCsvContent) {
+                    parseCSV(originalCsvContent);
+                }
+            } finally {
+                if (currentOperation === lastSaveOperation) {
+                    lastSaveOperation.isDone = true;
+                }
             }
         }
 
@@ -1851,22 +1145,24 @@
             }
         }
 
-        // Modify exportCSV to handle both file handle and download
+        // Modify exportCSV function
         async function exportCSV() {
             if (csvData.length === 0) {
                 alert('Không có dữ liệu để xuất!');
                 return;
             }
-            // Không cho phép export nếu số dòng dữ liệu < 1 (chỉ còn header hoặc rỗng)
-            if (csvData.length < 1) {
-                alert('❌ Không xuất file vì không có dữ liệu!');
+
+            // Validate data integrity
+            if (csvData.length < window._originalCsvLineCount) {
+                if (originalCsvContent) {
+                    parseCSV(originalCsvContent);
+                    showNotification('✅ Đã khôi phục dữ liệu ban đầu trước khi xuất!', 'success');
+                } else {
+                    alert('❌ Phát hiện mất dữ liệu! Không thể xuất file.');
                 return;
             }
-            // Kiểm tra an toàn: không ghi file nếu số dòng nhỏ hơn ban đầu
-            if (window._originalCsvLineCount && csvData.length < window._originalCsvLineCount) {
-                alert('❌ Số dòng dữ liệu hiện tại nhỏ hơn file gốc! Không xuất file để tránh mất dữ liệu.');
-                return;
             }
+
             try {
                 const csvContent = generateCSVContent();
                 const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
@@ -1901,6 +1197,10 @@
                 downloadCSV(csvContent, defaultFilename);
             } catch (error) {
                 showNotification('❌ Lỗi khi xuất CSV: ' + error.message, 'error');
+                if (originalCsvContent) {
+                    parseCSV(originalCsvContent);
+                    showNotification('✅ Đã khôi phục dữ liệu ban đầu sau lỗi!', 'success');
+                }
             }
         }
 
@@ -1938,40 +1238,22 @@
                     nextVideo();
                     break;
                 case '1':
-                    if (e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('harmfulContent').click();
-                    }
+                    if (e.ctrlKey) { e.preventDefault(); setLabel('Harmful Content'); }
                     break;
                 case '2':
-                    if (e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('suicide').click();
-                    }
+                    if (e.ctrlKey) { e.preventDefault(); setLabel('Suicide'); }
                     break;
                 case '3':
-                    if (e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('adultContent').click();
-                    }
+                    if (e.ctrlKey) { e.preventDefault(); setLabel('Adult Content'); }
                     break;
                 case '4':
-                    if (e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('safe').click();
-                    }
+                    if (e.ctrlKey) { e.preventDefault(); setLabel('Safe'); }
                     break;
                 case '5':
-                    if (e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('confuse').click();
-                    }
+                    if (e.ctrlKey) { e.preventDefault(); setLabel('confuse'); }
                     break;
                 case '6':
-                    if (e.ctrlKey) {
-                        e.preventDefault();
-                        document.getElementById('empty').click();
-                    }
+                    if (e.ctrlKey) { e.preventDefault(); setLabel('Empty'); }
                     break;
                 case 's':
                     if (e.ctrlKey) {
@@ -2018,10 +1300,12 @@
                         }
                     }
                     
-                    html += `<div style="background:${colors[idx%colors.length]};border-radius:10px;padding:16px;min-width:200px;max-width:300px;box-shadow:0 2px 6px #0001;flex:1 1 240px;">
-                        <div style='font-size:1.1em;font-weight:700;margin-bottom:6px;'>${icons[idx%icons.length]} ${row.Label}</div>
-                        <div style='margin-bottom:6px;font-size:0.9em;'><b>Định nghĩa:</b> <span style='color:#333;'>${row.Defination}</span></div>
-                        <div style='font-size:0.85em;'><b>Ví dụ:</b><br><span style='color:#555;'>${(row.Example||'').replace(/\\n/g, '<br>')}</span>${videoHtml}</div>
+                    const def = (row.Defination||'').replace(/\\n|\n/g, '<br>');
+                    const ex = (row.Example||'').replace(/\\n|\n/g, '<br>');
+                    html += `<div class="guideline-card" style="background:${colors[idx%colors.length]}">
+                        <div class='label-title'>${icons[idx%icons.length]} ${row.Label}</div>
+                        <div class='label-def'><b>Định nghĩa:</b> <span>${def}</span></div>
+                        <div class='label-example'><b>Ví dụ:</b><br><span>${ex}</span>${videoHtml}</div>
                     </div>`;
                 });
                 
@@ -2059,10 +1343,12 @@
 
         // Add auto-save interval
         setInterval(() => {
-            if (csvData.length > 0 && hasUnsavedChanges) {
+            if (saveBuffer.length > 0) {
+                performSave();
+            } else if (hasUnsavedChanges && lastSaveTime) {
                 const now = new Date();
-                if (!lastSaveTime || (now - lastSaveTime) > 300000) { // Auto-save every 5 minutes if there are changes
-                    autoSave();
+                if (now - lastSaveTime >= AUTO_SAVE_INTERVAL) {
+                    performSave();
                 }
             }
         }, 60000); // Check every minute
@@ -2085,6 +1371,84 @@
                     if (corsWarn) corsWarn.style.display = 'block';
                 }
                 origConsoleError.apply(console, args);
+            };
+        })();
+
+        // Add window unload handler to save pending changes
+        window.addEventListener('beforeunload', async (e) => {
+            if (saveBuffer.length > 0) {
+                e.preventDefault();
+                e.returnValue = '';
+                
+                // Try to save remaining changes
+                await performSave();
+                
+                return '';
+            }
+        });
+
+        // Restore autoSave to always show notification after save
+        async function autoSave() {
+            if (csvData.length === 0 || !hasUnsavedChanges) return;
+            if (csvData.length < window._originalCsvLineCount) {
+                showNotification('⚠️ Phát hiện số dòng dữ liệu ít hơn ban đầu! Đang khôi phục...', 'error');
+                if (originalCsvContent) {
+                    parseCSV(originalCsvContent);
+                    showNotification('✅ Đã khôi phục dữ liệu ban đầu!', 'success');
+                }
+                return;
+            }
+            try {
+                const csvContent = generateCSVContent();
+                if (fileHandle) {
+                    try {
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(csvContent);
+                        await writable.close();
+                        lastSaveTime = new Date();
+                        hasUnsavedChanges = false;
+                        showNotification('💾 Đã lưu thay đổi!', 'success');
+                    } catch (error) {
+                        console.warn('Lỗi khi lưu file:', error);
+                        if (originalCsvContent) {
+                            parseCSV(originalCsvContent);
+                        }
+                        fileHandle = null;
+                        downloadCSV(csvContent, originalFile ? originalFile.name : 'labeled_tiktok_videos.csv');
+                        showNotification('❌ Lỗi khi lưu file, đã tải file tạm thời!', 'error');
+                    }
+                } else if (permissionRequested) {
+                    downloadCSV(csvContent, originalFile ? originalFile.name : 'labeled_tiktok_videos.csv');
+                    showNotification('💾 Đã lưu file tạm thời!', 'success');
+                }
+            } catch (error) {
+                showNotification('❌ Lỗi khi tự động lưu: ' + error.message, 'error');
+                if (originalCsvContent) {
+                    parseCSV(originalCsvContent);
+                }
+            }
+        }
+
+        // Add dark mode logic
+        (function() {
+            const root = document.documentElement;
+            const themeBtn = document.getElementById('themeToggleBtn');
+            function setTheme(mode) {
+                if (mode === 'dark') {
+                    root.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                    if (themeBtn) themeBtn.textContent = '☀️';
+                } else {
+                    root.classList.remove('dark-mode');
+                    localStorage.setItem('theme', 'light');
+                    if (themeBtn) themeBtn.textContent = '🌙';
+                }
+            }
+            // Init
+            const saved = localStorage.getItem('theme');
+            setTheme(saved === 'dark' ? 'dark' : 'light');
+            if (themeBtn) themeBtn.onclick = function() {
+                setTheme(root.classList.contains('dark-mode') ? 'light' : 'dark');
             };
         })();
     </script>
