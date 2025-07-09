@@ -160,10 +160,7 @@ Mọi đóng góp đều được chào đón! Vui lòng:
 
 ## 📞 Liên hệ
 
-- **Email**: [your-email@example.com]
-- **GitHub**: [your-github-username]
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-
+- **Email**: [22520968@gm.uit.edu.vn]]
 ---
 
 **Made with ❤️ for the TikTok research community** 
