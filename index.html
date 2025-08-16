@@ -3,15 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TikTok Video Labeling Tool v2.1</title>
+    <title>TikTok Video Labeling Tool v2.2</title>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎥 TikTok Video Labeling Tool <span class="version-badge">v2.1</span></h1>
+            <h1>🎥 TikTok Vido Labeling Tool <span class="version-badge">v2.2</span></h1>
             <p>Công cụ gắn nhãn video TikTok chuyên nghiệp với giao diện được tối ưu</p>
+            <p style="font-size: 0.9em; color: #666; margin-top: 5px;">✨ Tính năng mới: File mẫu để test và hỗ trợ CSV đơn giản (chỉ cần username, id_video)</p>
             <div style="position: absolute; top: 18px; right: 32px;">
                 <button id="themeToggleBtn" title="Chuyển chế độ sáng/tối" style="background: none; border: none; font-size: 1.5em; cursor: pointer;">🌙</button>
             </div>
@@ -25,6 +26,10 @@
                 <span style="display:inline-block;margin-top:2px;">
                     <b>Ctrl+1</b> (Harmful), <b>Ctrl+2</b> (Suicide), <b>Ctrl+3</b> (Adult), <b>Ctrl+4</b> (Safe), <b>Ctrl+5</b> (Confuse), <b>Ctrl+6</b> (Empty), <b>Ctrl+S</b> (Xuất CSV), <b>←</b>/<b>→</b> (chuyển video)
                 </span>
+                <br>
+                <span style="display:inline-block;margin-top:4px;font-size:0.9em;color:#666;">
+                    💡 <b>Bắt đầu:</b> Chọn "File mẫu" để test (lưu tạm thời) hoặc upload file CSV thực
+                </span>
             </span>
             <button onclick="document.getElementById('shortcutHint').style.display='none'" style="position:absolute;top:8px;right:12px;background:none;border:none;font-size:1.2em;cursor:pointer;color:#888;">✖</button>
         </div>
@@ -37,10 +42,71 @@
         </div>
 
         <div class="upload-section">
-            <div class="file-input-wrapper">
-                <input type="file" id="csvFile" accept=".csv" />
-                📁 Chọn file CSV
+            <div class="file-selection-container">
+                <h3>📂 Chọn dữ liệu để gắn nhãn</h3>
+                
+                <!-- File Selection Options -->
+                <div class="file-options">
+                    <div class="file-option">
+                        <div class="option-header">
+                            <span class="option-icon">🎯</span>
+                            <span class="option-title">File mẫu (Test)</span>
+                        </div>
+                        <div class="option-description">
+                            Sử dụng file <code>100samples.csv</code> có sẵn để test thử ứng dụng
+                        </div>
+                        <button onclick="loadSampleFile()" class="sample-btn">
+                            🚀 Tải file mẫu
+                        </button>
+                    </div>
+                    
+                    <div class="file-option">
+                        <div class="option-header">
+                            <span class="option-icon">📁</span>
+                            <span class="option-title">Upload file CSV</span>
+                        </div>
+                        <div class="option-description">
+                            Upload file CSV của bạn với định dạng: <code>username,id_video</code> (các cột khác sẽ được tạo tự động)
+                        </div>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="csvFile" accept=".csv" />
+                            📁 Chọn file CSV
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Format Guide -->
+                <div class="format-guide">
+                    <details>
+                        <summary>📋 Hướng dẫn định dạng file CSV</summary>
+                        <div class="format-content">
+                            <p><strong>File CSV cần có các cột sau:</strong></p>
+                            <ul>
+                                <li><code>username</code>: Tên người dùng TikTok (bắt buộc)</li>
+                                <li><code>id_video</code>: ID video TikTok (bắt buộc)</li>
+                            </ul>
+                            <p><strong>Các cột khác sẽ được tạo tự động:</strong></p>
+                            <ul>
+                                <li><code>Safe</code>: Nội dung an toàn (true/false)</li>
+                                <li><code>Suicide</code>: Nội dung tự sát (true/false)</li>
+                                <li><code>Adult Content</code>: Nội dung người lớn (true/false)</li>
+                                <li><code>Harmful Content</code>: Nội dung có hại (true/false)</li>
+                                <li><code>confuse</code>: Phân vân (true/false)</li>
+                                <li><code>Empty</code>: Không khả dụng (true/false)</li>
+                            </ul>
+                            <p><strong>Ví dụ:</strong></p>
+                            <pre>username,id_video
+"user1","1234567890"
+"user2","0987654321"</pre>
+                            <p><strong>Hoặc với đầy đủ cột (tùy chọn):</strong></p>
+                            <pre>username,id_video,Safe,Suicide,Adult Content,Harmful Content,confuse,Empty
+"user1","1234567890","false","false","false","false","false","false"
+"user2","0987654321","true","false","false","false","false","false"</pre>
+                        </div>
+                    </details>
+                </div>
             </div>
+            
             <button onclick="exportCSV()" class="export-btn" style="display:none; width: auto; padding: 8px 16px; margin-left: 12px; font-size: 0.9em;" id="exportBtn">
                 💾 Xuất CSV
             </button>
@@ -57,6 +123,10 @@
                 <div class="stat-card">
                     <div id="progressPercent">0%</div>
                     <div>Tiến độ</div>
+                </div>
+                <div class="stat-card" id="fileModeCard" style="display: none;">
+                    <div id="fileMode">📁</div>
+                    <div id="fileModeText">Chế độ</div>
                 </div>
             </div>
             <div class="progress-bar" id="progressBar" style="display: none;">
@@ -233,6 +303,7 @@
         let hasUnsavedChanges = false;
         let permissionRequested = false;
         let isProcessingFile = false;
+        let isSampleFile = false; // Flag to identify if using sample file
 
         // Add data backup variables at the top of the script
         let originalCsvContent = null;
@@ -308,6 +379,7 @@
                 originalFile = file;
                 hasUnsavedChanges = false;
                 permissionRequested = false;
+                isSampleFile = false; // Mark as real file upload
 
                 // Read and store original content
                 originalCsvContent = await readFileContent(file);
@@ -405,6 +477,17 @@
                     throw new Error('File CSV không có header');
                 }
 
+                // Check required columns
+                const requiredColumns = ['username', 'id_video'];
+                const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+                if (missingColumns.length > 0) {
+                    showNotification(`❌ File CSV thiếu cột bắt buộc: ${missingColumns.join(', ')}`, 'error');
+                    throw new Error(`Thiếu cột bắt buộc: ${missingColumns.join(', ')}`);
+                }
+
+                // Define all possible columns
+                const allColumns = ['username', 'id_video', 'Safe', 'Suicide', 'Adult Content', 'Harmful Content', 'confuse', 'Empty'];
+                
                 csvData = [];
                 let errorLines = [];
                 let validLineCount = 0;
@@ -413,12 +496,20 @@
 
                     try {
                         const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-                        while (values.length < headers.length) values.push('');
-                        if (values.length > headers.length) values.length = headers.length;
                         const row = {};
+                        
+                        // Process existing columns
                         headers.forEach((header, index) => {
                             row[header] = values[index] || '';
                         });
+                        
+                        // Add missing columns with default values
+                        allColumns.forEach(col => {
+                            if (!row.hasOwnProperty(col)) {
+                                row[col] = 'false';
+                            }
+                        });
+                        
                         csvData.push(row);
                         validLineCount++;
                     } catch (error) {
@@ -989,6 +1080,26 @@
             document.getElementById('labeledVideos').textContent = labeled;
             document.getElementById('progressPercent').textContent = progress + '%';
             document.getElementById('progressFill').style.width = progress + '%';
+            
+            // Update file mode indicator
+            const fileModeCard = document.getElementById('fileModeCard');
+            const fileMode = document.getElementById('fileMode');
+            const fileModeText = document.getElementById('fileModeText');
+            
+            if (csvData.length > 0) {
+                fileModeCard.style.display = 'block';
+                if (isSampleFile) {
+                    fileMode.textContent = '🧪';
+                    fileModeText.textContent = 'Test Mode';
+                    fileModeCard.style.background = 'linear-gradient(45deg, #ffc107, #ff9800)';
+                } else {
+                    fileMode.textContent = '📁';
+                    fileModeText.textContent = 'Real File';
+                    fileModeCard.style.background = 'linear-gradient(45deg, #4CAF50, #45a049)';
+                }
+            } else {
+                fileModeCard.style.display = 'none';
+            }
         }
 
         // Add buffer management functions
@@ -1056,7 +1167,13 @@
 
                 const csvContent = generateCSVContent();
                 
-                if (fileHandle) {
+                // Handle sample file differently - only save temporarily
+                if (isSampleFile) {
+                    // For sample files, just show notification without saving
+                    lastSaveTime = new Date();
+                    hasUnsavedChanges = false;
+                    showNotification('💾 Đã lưu tạm thời ' + saveBuffer.length + ' thay đổi! (Chế độ test)', 'success');
+                } else if (fileHandle) {
                     try {
                         // Create write batch
                         const writable = await fileHandle.createWritable({
@@ -1101,15 +1218,13 @@
 
         // Helper function to generate CSV content
         function generateCSVContent() {
-            const headers = Object.keys(csvData[0]);
-            if (!headers.includes('Empty')) {
-                headers.push('Empty');
-            }
-            let csvContent = headers.join(',') + '\n';
+            // Ensure all columns are present in the correct order
+            const allColumns = ['username', 'id_video', 'Safe', 'Suicide', 'Adult Content', 'Harmful Content', 'confuse', 'Empty'];
+            let csvContent = allColumns.join(',') + '\n';
 
             csvData.forEach(row => {
-                const values = headers.map(header => {
-                    let value = row[header];
+                const values = allColumns.map(header => {
+                    let value = row[header] || 'false';
                     if (header === 'id_video' && value) {
                         value = String(value);
                     }
@@ -1166,7 +1281,16 @@
             try {
                 const csvContent = generateCSVContent();
                 const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
-                const defaultFilename = `labeled_tiktok_videos_${timestamp}.csv`;
+                const defaultFilename = isSampleFile ? 
+                    `sample_test_results_${timestamp}.csv` : 
+                    `labeled_tiktok_videos_${timestamp}.csv`;
+
+                // For sample files, always download without permission dialog
+                if (isSampleFile) {
+                    downloadCSV(csvContent, defaultFilename);
+                    showNotification('💾 Đã xuất kết quả test!', 'success');
+                    return;
+                }
 
                 if (!permissionRequested) {
                     const granted = await showPermissionDialog();
@@ -1325,8 +1449,76 @@
             }
         }
 
+        // Load sample file function
+        async function loadSampleFile() {
+            try {
+                showNotification('🔄 Đang tải file mẫu...', 'success');
+                
+                const response = await fetch('100samples.csv');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const csvContent = await response.text();
+                if (!csvContent || csvContent.trim().length === 0) {
+                    throw new Error('File mẫu trống hoặc không hợp lệ');
+                }
+
+                // Reset previous data
+                csvData = [];
+                fileHandle = null;
+                originalFile = null;
+                hasUnsavedChanges = false;
+                permissionRequested = false;
+                isSampleFile = true; // Mark as sample file
+
+                // Store original content
+                originalCsvContent = csvContent;
+                
+                // Parse CSV data
+                parseCSV(csvContent);
+                initialDataLoaded = true;
+
+                showNotification('✅ Đã tải file mẫu thành công! Bạn có thể bắt đầu gắn nhãn. (Chế độ test - chỉ lưu tạm thời)', 'success');
+                
+                // Auto load first video
+                if (csvData.length > 0) {
+                    setTimeout(() => {
+                        autoLoadFirstVideo();
+                    }, 500);
+                }
+                
+            } catch (error) {
+                console.error('Lỗi khi tải file mẫu:', error);
+                showNotification('❌ Không thể tải file mẫu: ' + error.message, 'error');
+                
+                // Fallback: try to create a sample file
+                try {
+                    const sampleData = `username,id_video,Safe,Suicide,Adult Content,Harmful Content,confuse,Empty
+"sample_user1","7116841099070623003","false","false","false","false","false","false"
+"sample_user2","7298717939052711170","false","false","false","false","false","false"
+"sample_user3","7361815198019226897","false","false","false","false","false","false"`;
+                    
+                    originalCsvContent = sampleData;
+                    parseCSV(sampleData);
+                    initialDataLoaded = true;
+                    isSampleFile = true; // Mark as sample file
+                    
+                    showNotification('✅ Đã tạo dữ liệu mẫu để test! (Chế độ test - chỉ lưu tạm thời)', 'success');
+                    
+                    if (csvData.length > 0) {
+                        setTimeout(() => {
+                            autoLoadFirstVideo();
+                        }, 500);
+                    }
+                } catch (fallbackError) {
+                    showNotification('❌ Không thể tạo dữ liệu mẫu: ' + fallbackError.message, 'error');
+                }
+            }
+        }
+
         // Initialize on load
-        console.log('TikTok Video Labeling Tool v2.1 loaded successfully!');
+        console.log('TikTok Video Labeling Tool v2.3 loaded successfully!');
         loadGuideline();
 
         // Accordion/collapsible logic
@@ -1400,7 +1592,13 @@
             }
             try {
                 const csvContent = generateCSVContent();
-                if (fileHandle) {
+                
+                // Handle sample file differently
+                if (isSampleFile) {
+                    lastSaveTime = new Date();
+                    hasUnsavedChanges = false;
+                    showNotification('💾 Đã lưu tạm thời! (Chế độ test)', 'success');
+                } else if (fileHandle) {
                     try {
                         const writable = await fileHandle.createWritable();
                         await writable.write(csvContent);
