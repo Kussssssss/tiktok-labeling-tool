@@ -1,4 +1,4 @@
-# TikTok Content Labeling Tool v2.2
+# TikTok Content Labeling Tool v2.3
 
 A professional TikTok content labeling tool with modern interface and advanced features.
 
@@ -229,6 +229,7 @@ All contributions are welcome! Please:
 
 ## 📞 Contact & Support
 
+<<<<<<< HEAD
 - **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
 - **Email**: [your-email@example.com]
@@ -244,3 +245,9 @@ All contributions are welcome! Please:
 **Made with ❤️ for the TikTok research community**
 
 *This tool is designed to help researchers and content moderators efficiently label TikTok content for analysis and research purposes.* 
+=======
+- **Email**: [22520968@gm.uit.edu.vn]]
+---
+
+**Made with ❤️ for the TikTok research community** 
+>>>>>>> a656c54901007e708368989ba58dffe9da8583de
