@@ -1,4 +1,4 @@
-# TikTok Content Labeling Tool v2.0
+# TikTok Content Labeling Tool
 
 Công cụ gắn nhãn nội dung TikTok với giao diện hiện đại và tính năng nâng cao.
 
