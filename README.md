@@ -148,26 +148,6 @@ tiktok-labeling-tool/
 3. Verify no special characters in headers
 4. Try with sample file first
 
-## 🔮 Future Roadmap
-
-### Upcoming Features
-- [ ] Batch processing capabilities
-- [ ] AI-assisted labeling
-- [ ] Export to multiple formats (JSON, XML)
-- [ ] Collaborative labeling
-- [ ] Advanced analytics dashboard
-- [ ] Custom label categories
-- [ ] Bulk video import
-- [ ] Label confidence scoring
-
-### Technical Improvements
-- [ ] Service Worker for offline support
-- [ ] WebAssembly for better performance
-- [ ] IndexedDB for larger datasets
-- [ ] WebRTC for real-time collaboration
-- [ ] Progressive Web App (PWA) features
-- [ ] Advanced caching strategies
-
 ## 📄 License
 
 MIT License - See LICENSE file for details.
