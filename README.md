@@ -1,4 +1,4 @@
-# TikTok Content Labeling Tool v2.3
+# TikTok Content Labeling Tool
 
 A professional TikTok content labeling tool with modern interface and advanced features.
 
@@ -56,32 +56,6 @@ tiktok-labeling-tool/
 - **📺 Blockquote**: Native embedding method
 - **🔗 External**: Direct link to TikTok
 
-## 🎨 Design System
-
-### Color Palette
-```css
---primary-color: hsl(220, 100%, 60%)    /* Primary Blue */
---secondary-color: hsl(280, 70%, 70%)   /* Secondary Purple */
---accent-color: hsl(350, 85%, 70%)      /* Accent Pink */
---success-color: hsl(142, 76%, 60%)     /* Success Green */
---warning-color: hsl(45, 95%, 80%)      /* Warning Yellow */
---error-color: hsl(348, 86%, 80%)       /* Error Red */
-```
-
-### Typography
-- **Primary Font**: Inter (Google Fonts)
-- **Code Font**: JetBrains Mono
-- **Responsive**: Automatic size adjustment
-
-### Spacing System
-```css
---space-xs: 0.25rem    /* 4px */
---space-sm: 0.5rem     /* 8px */
---space-md: 1rem       /* 16px */
---space-lg: 1.5rem     /* 24px */
---space-xl: 2rem       /* 32px */
-```
-
 ## 🔧 Technical Features
 
 ### Video Loading System
@@ -101,19 +75,6 @@ tiktok-labeling-tool/
 - **Debouncing**: Prevent excessive API calls
 - **Memory Management**: Automatic memory cleanup
 - **Efficient Rendering**: Optimized DOM updates
-
-## 📱 Responsive Design
-
-### Breakpoints
-- **Desktop**: > 1200px
-- **Tablet**: 768px - 1200px
-- **Mobile**: < 768px
-
-### Mobile Optimizations
-- Touch-friendly buttons
-- Swipe gestures
-- Optimized video player
-- Simplified navigation
 
 ## 🔒 Security & Privacy
 
@@ -227,13 +188,6 @@ All contributions are welcome! Please:
 - Test on multiple browsers
 - Update documentation as needed
 
-## 📞 Contact & Support
-
-<<<<<<< HEAD
-- **Issues**: [GitHub Issues](https://github.com/your-repo/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-repo/discussions)
-- **Email**: [your-email@example.com]
-
 ## 🙏 Acknowledgments
 
 - TikTok for providing video embedding APIs
@@ -248,6 +202,3 @@ All contributions are welcome! Please:
 =======
 - **Email**: [22520968@gm.uit.edu.vn]]
 ---
-
-**Made with ❤️ for the TikTok research community** 
->>>>>>> a656c54901007e708368989ba58dffe9da8583de
